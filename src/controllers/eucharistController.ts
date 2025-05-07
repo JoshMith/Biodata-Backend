@@ -70,27 +70,48 @@ export const getEucharistById = asyncHandler(async (req: Request, res: Response)
     }
 });
 
+// Get eucharist by user_id
+export const getEucharistByUserId = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query("SELECT * FROM eucharist WHERE user_id = $1", [userId]);
+
+        if (result.rows.length === 0) {
+            res.status(400).json({ message: "No eucharist records found for the given user_id" });
+            return;
+        }
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error getting eucharist records by user_id:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 // Update eucharist
 export const updateEucharist = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { baptism_place, eucharist_date, user_id } = req.body;
+        const { eucharist_place, eucharist_date, user_id } = req.body;
 
         const eucharistResult = await pool.query(
-            `UPDATE eucharist SET eucharist_place = $1, eucharist_date = $2, user_id = $3
+            `UPDATE eucharist SET 
+                eucharist_place = COALESCE($1, eucharist_place), 
+                eucharist_date = COALESCE($2, eucharist_date), 
+                user_id = COALESCE($3, user_id)
              WHERE eucharist_id = $4 RETURNING *`,
-            [baptism_place, eucharist_date, user_id, id]
+            [eucharist_place, eucharist_date, user_id, id]
         );
 
         if (eucharistResult.rows.length === 0) {
             res.status(400).json({ message: "Eucharist record not found" });
-            return
+            return;
         }
 
         res.json({
             message: "Eucharist record updated successfully",
-            book: eucharistResult.rows[0]
+            event: eucharistResult.rows[0]
         });
 
     } catch (error) {

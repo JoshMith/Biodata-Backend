@@ -1,7 +1,7 @@
 import express from "express"
 import { protect } from "../middlewares/auth/protect"
 import { adminClergyGuard, adminGuard } from "../middlewares/auth/roleMiddleWare"
-import { createBaptism, deleteBaptism, getBaptism, getBaptismById, updateBaptism } from "../controllers/baptismController"
+import { createBaptism, deleteBaptism, getBaptism,  getBaptismById, getBaptismByUserId, updateBaptism } from "../controllers/baptismController"
 
 //instance of router
 const router = express.Router()
@@ -11,6 +11,7 @@ const router = express.Router()
 router.post("/", createBaptism)
 router.get("/", getBaptism)
 router.get("/:id", getBaptismById)
+router.get("/user/:userId", getBaptismByUserId)
 router.put("/:id", updateBaptism)
 
 

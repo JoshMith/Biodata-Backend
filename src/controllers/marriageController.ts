@@ -50,7 +50,6 @@ export const getMarriage = asyncHandler(async (req: Request, res: Response) => {
     }
 });
 
-
 // Get single marriage
 export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
     try {
@@ -70,6 +69,24 @@ export const getMarriageById = asyncHandler(async (req: Request, res: Response) 
     }
 });
 
+// Get marriage by user_id
+export const getMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query("SELECT * FROM marriage WHERE user_id = $1", [userId]);
+
+        if (result.rows.length === 0) {
+            res.status(400).json({ message: "No marriage records found for the given user_id" });
+            return;
+        }
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error getting marriage records by user_id:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 // Update marriage
 export const updateMarriage = asyncHandler(async (req: Request, res: Response) => {
@@ -77,20 +94,54 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         const { id } = req.params;
         const { spouse_name, marriage_place, marriage_date, marriage_no, user_id } = req.body;
 
-        const marriageResult = await pool.query(
-            `UPDATE books SET baptism_place = $1, baptism_date = $2, baptised_by = $3, administrator = $4, user_id = $5
-             WHERE baptism_id = $6 RETURNING *`,
-            [spouse_name, marriage_place, marriage_date, marriage_no, user_id, id]
-        );
+        const fieldsToUpdate = [];
+        const values = [];
+        let index = 1;
+
+        if (spouse_name) {
+            fieldsToUpdate.push(`spouse_name = $${index++}`);
+            values.push(spouse_name);
+        }
+        if (marriage_place) {
+            fieldsToUpdate.push(`marriage_place = $${index++}`);
+            values.push(marriage_place);
+        }
+        if (marriage_date) {
+            fieldsToUpdate.push(`marriage_date = $${index++}`);
+            values.push(marriage_date);
+        }
+        if (marriage_no) {
+            fieldsToUpdate.push(`marriage_no = $${index++}`);
+            values.push(marriage_no);
+        }
+        if (user_id) {
+            fieldsToUpdate.push(`user_id = $${index++}`);
+            values.push(user_id);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            res.status(400).json({ message: "No fields provided for update" });
+            return;
+        }
+
+        values.push(id);
+
+        const query = `
+            UPDATE marriage 
+            SET ${fieldsToUpdate.join(", ")} 
+            WHERE marriage_id = $${index} 
+            RETURNING *`;
+
+        const marriageResult = await pool.query(query, values);
 
         if (marriageResult.rows.length === 0) {
             res.status(400).json({ message: "Marriage record not found" });
-            return
+            return;
         }
 
         res.json({
             message: "Marriage record updated successfully",
-            book: marriageResult.rows[0]
+            marriage: marriageResult.rows[0]
         });
 
     } catch (error) {

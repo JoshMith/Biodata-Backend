@@ -38,7 +38,7 @@ const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200'];
 //CORS middleware
 app.use(cors({
     origin: "*",
-    methods: "GET, POST, PUT, DELETE",
+    methods: "GET, POST, PUT, PATCH, DELETE",
     credentials: true // allows cookies and auth headers
 }))
 

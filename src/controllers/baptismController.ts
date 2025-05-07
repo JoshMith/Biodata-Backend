@@ -70,6 +70,25 @@ export const getBaptismById = asyncHandler(async (req: Request, res: Response) =
     }
 });
 
+// Get baptism by user_id
+export const getBaptismByUserId = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query("SELECT * FROM baptism WHERE user_id = $1", [userId]);
+
+        if (result.rows.length === 0) {
+            res.status(400).json({ message: "No baptism records found for the given user_id" });
+            return;
+        }
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error getting baptism records by user_id:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 
 // Update baptism
 export const updateBaptism = asyncHandler(async (req: Request, res: Response) => {
@@ -77,20 +96,46 @@ export const updateBaptism = asyncHandler(async (req: Request, res: Response) =>
         const { id } = req.params;
         const { baptism_place, baptism_date, baptised_by, administrator, user_id } = req.body;
 
-        const baptismResult = await pool.query(
-            `UPDATE books SET baptism_place = $1, baptism_date = $2, baptised_by = $3, administrator = $4, user_id = $5
-             WHERE baptism_id = $6 RETURNING *`,
-            [baptism_place, baptism_date, baptised_by, administrator, user_id, id]
-        );
+        const fieldsToUpdate = [];
+        const values = [];
+        let index = 1;
 
-        if (baptismResult.rows.length === 0) {
-            res.status(400).json({ message: "Baptism record not found" });
-            return
+        if (baptism_place) {
+            fieldsToUpdate.push(`baptism_place = $${index++}`);
+            values.push(baptism_place);
         }
+        if (baptism_date) {
+            fieldsToUpdate.push(`baptism_date = $${index++}`);
+            values.push(baptism_date);
+        }
+        if (baptised_by) {
+            fieldsToUpdate.push(`baptised_by = $${index++}`);
+            values.push(baptised_by);
+        }
+        if (administrator) {
+            fieldsToUpdate.push(`administrator = $${index++}`);
+            values.push(administrator);
+        }
+        if (user_id) {
+            fieldsToUpdate.push(`user_id = $${index++}`);
+            values.push(user_id);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            res.status(400).json({ message: "No fields to update" });
+            return;
+        }
+
+        values.push(id);
+
+        const baptismResult = await pool.query(
+            `UPDATE baptism SET ${fieldsToUpdate.join(", ")} WHERE baptism_id = $${index} RETURNING *`,
+            values
+        );
 
         res.json({
             message: "Baptism record updated successfully",
-            book: baptismResult.rows[0]
+            baptism: baptismResult.rows[0]
         });
 
     } catch (error) {

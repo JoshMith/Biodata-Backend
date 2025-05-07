@@ -6,7 +6,7 @@ import asyncHandler from "../middlewares/asyncHandler";
 import { userInfo } from "os";
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence } = req.body
+    const {name, email, password, role} = req.body
 
     // Check if user exists
     const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -22,8 +22,8 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
     //insert into users table
     const newUser = await pool.query(
-        "INSERT INTO users (name, email, password_hash, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *",
-        [name, email, hashedPassword, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence]
+        "INSERT INTO users (name, email, password_hash, role) VALUES ($1,$2,$3,$4) RETURNING *",
+        [name, email, hashedPassword, role]
     );
 
 

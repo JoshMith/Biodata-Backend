@@ -4,6 +4,38 @@ import asyncHandler from "../middlewares/asyncHandler"
 import bcrypt from "bcrypt"
 
 
+// Add a new user
+export const addUser = asyncHandler(async (req, res) => {
+    try {
+        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence } = req.body;
+
+        // Check if email already exists
+        const emailCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (emailCheck.rows.length > 0) {
+            res.status(400).json({ message: "Email already in use" });
+            return;
+        }
+
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Insert the new user
+        const newUser = await pool.query(
+            "INSERT INTO users (name, email, password_hash, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+            [name, email, hashedPassword, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence]
+        );
+
+        res.status(201).json({
+            message: "User successfully added",
+            user: newUser.rows[0],
+        });
+    } catch (error) {
+        console.error("Error adding user:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 //Get All users 
 export const getUsers = asyncHandler(async (req, res) => {
     try {
@@ -81,14 +113,73 @@ export const updateUser = asyncHandler(async (req, res) => {
             return;
         }
 
-        //before updating a user, we need to hash the passwords
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
+        // Prepare fields for update
+        const fieldsToUpdate = [];
+        const values = [];
+        let index = 1;
+
+        if (name) {
+            fieldsToUpdate.push(`name=$${index++}`);
+            values.push(name);
+        }
+        if (email) {
+            fieldsToUpdate.push(`email=$${index++}`);
+            values.push(email);
+        }
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            fieldsToUpdate.push(`password_hash=$${index++}`);
+            values.push(hashedPassword);
+        }
+        if (role) {
+            fieldsToUpdate.push(`role=$${index++}`);
+            values.push(role);
+        }
+        if (father) {
+            fieldsToUpdate.push(`father=$${index++}`);
+            values.push(father);
+        }
+        if (mother) {
+            fieldsToUpdate.push(`mother=$${index++}`);
+            values.push(mother);
+        }
+        if (tribe) {
+            fieldsToUpdate.push(`tribe=$${index++}`);
+            values.push(tribe);
+        }
+        if (clan) {
+            fieldsToUpdate.push(`clan=$${index++}`);
+            values.push(clan);
+        }
+        if (birth_place) {
+            fieldsToUpdate.push(`birth_place=$${index++}`);
+            values.push(birth_place);
+        }
+        if (birth_date) {
+            fieldsToUpdate.push(`birth_date=$${index++}`);
+            values.push(birth_date);
+        }
+        if (sub_county) {
+            fieldsToUpdate.push(`sub_county=$${index++}`);
+            values.push(sub_county);
+        }
+        if (residence) {
+            fieldsToUpdate.push(`residence=$${index++}`);
+            values.push(residence);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            res.status(400).json({ message: "No fields to update" });
+            return;
+        }
+
+        values.push(id);
 
         // Update the user
         const updatedUser = await pool.query(
-            "UPDATE users SET name=$1, email=$2, password_hash=$3, role=$4, father=$5, mother=$6, tribe=$7, clan=$8, birth_place=$9, birth_date=$10, sub_county=$11, residence=$12 WHERE id = $13 RETURNING *",
-            [name, email, hashedPassword, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, id]
+            `UPDATE users SET ${fieldsToUpdate.join(", ")} WHERE id = $${index} RETURNING *`,
+            values
         );
 
         res.json({

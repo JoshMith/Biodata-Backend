@@ -70,6 +70,24 @@ export const getConfirmationById = asyncHandler(async (req: Request, res: Respon
     }
 });
 
+// Get confirmation by user_id
+export const getConfirmationByUserId = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query("SELECT * FROM confirmation WHERE user_id = $1", [userId]);
+
+        if (result.rows.length === 0) {
+            res.status(400).json({ message: "No confirmation records found for the given user_id" });
+            return;
+        }
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error getting confirmation records by user_id:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 // Update confirmation
 export const updateConfirmation = asyncHandler(async (req: Request, res: Response) => {
@@ -77,20 +95,45 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
         const { id } = req.params;
         const { confirmation_place, confirmation_date, confirmation_no, user_id } = req.body;
 
-        const confirmationResult = await pool.query(
-            `UPDATE books SET confirmation_place = $1, baptism_date = $2, baptised_by = $3, administrator = $4, user_id = $5
-             WHERE confirmation_id = $6 RETURNING *`,
-            [confirmation_place, confirmation_date, confirmation_no,  user_id, id]
-        );
+        const fieldsToUpdate = [];
+        const values = [];
+        let index = 1;
+
+        if (confirmation_place) {
+            fieldsToUpdate.push(`confirmation_place = $${index++}`);
+            values.push(confirmation_place);
+        }
+        if (confirmation_date) {
+            fieldsToUpdate.push(`confirmation_date = $${index++}`);
+            values.push(confirmation_date);
+        }
+        if (confirmation_no) {
+            fieldsToUpdate.push(`confirmation_no = $${index++}`);
+            values.push(confirmation_no);
+        }
+        if (user_id) {
+            fieldsToUpdate.push(`user_id = $${index++}`);
+            values.push(user_id);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            res.status(400).json({ message: "No fields provided for update" });
+            return;
+        }
+
+        values.push(id);
+        const query = `UPDATE confirmation SET ${fieldsToUpdate.join(", ")} WHERE confirmation_id = $${index} RETURNING *`;
+
+        const confirmationResult = await pool.query(query, values);
 
         if (confirmationResult.rows.length === 0) {
             res.status(400).json({ message: "Confirmation record not found" });
-            return
+            return;
         }
 
         res.json({
             message: "Confirmation record updated successfully",
-            book: confirmationResult.rows[0]
+            confirmation: confirmationResult.rows[0]
         });
 
     } catch (error) {

@@ -1,7 +1,7 @@
 import express from "express"
 import { protect } from "../middlewares/auth/protect"
 import { adminClergyGuard, adminGuard } from "../middlewares/auth/roleMiddleWare"
-import { createMarriage, deleteMarriage, getMarriage, getMarriageById, updateMarriage } from "../controllers/marriageController"
+import { createMarriage, deleteMarriage, getMarriage, getMarriageById, getMarriageByUserId, updateMarriage } from "../controllers/marriageController"
 
 //instance of router
 const router = express.Router()
@@ -11,6 +11,7 @@ const router = express.Router()
 router.post("/", createMarriage)
 router.get("/", getMarriage)
 router.get("/:id", getMarriageById)
+router.get("/user/:userId", getMarriageByUserId)
 router.put("/:id", updateMarriage)
 
 
