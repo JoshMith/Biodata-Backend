@@ -3,10 +3,9 @@ import pool from "../config/db.config";
 import bcrypt from 'bcryptjs'
 import { generateToken } from "../utils/helpers/generateToken";
 import asyncHandler from "../middlewares/asyncHandler";
-import { userInfo } from "os";
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const {name, email, password, role} = req.body
+    const { name, email, password, role } = req.body
 
     // Check if user exists
     const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -28,7 +27,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
 
     // Generate user-specific token
-    generateToken(res, newUser.rows[0].id, newUser.rows[0].role)
+    // generateToken(res, newUser.rows[0].id, newUser.rows[0].role)
 
     res.status(201).json({
         message: "User registered successfully",
@@ -41,11 +40,6 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
 export const loginUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
-
-    // // Validate email and password
-    // if (!email || !password) {
-    //     return res.status(400).json({ message: "Please provide both email and password" });
-    // }
 
     // Check if user exists in the database
     const userQuery = await pool.query(
@@ -63,17 +57,23 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     // Retrieve the user data from the query result
     const user = userQuery.rows[0];
 
-    // Check if the user is already logged in (via the cookie)
-    if (req.cookies.access_token) {
-        return res.status(400).json({ message: "User already logged in" });
-    }
-
     // Compare the entered password with the stored hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
         return res.status(401).json({ message: "Invalid email or password" });
     }
+
+    // ✅ Only allow Admin and Clergy to login
+    if (user.role !== "Admin" && user.role !== "Clergy") {
+        res.status(403).json({ message: "Access denied: Insufficient permissions. Only Admins and Clergy allowed!" });
+        return;
+    }
+
+    // // Check if the user is already logged in (via the cookie)
+    // if (req.cookies.access_token) {
+    //     return res.status(400).json({ message: "User already logged in" });
+    // }
 
     // Generate the JWT token (custom function for token generation)
     await generateToken(res, user.id, user.role);
@@ -92,43 +92,49 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
 
 export const logoutUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    // Check if user exists
-    const userQuery = await pool.query(
-        `SELECT users.id, users.name, users.email, users.password_hash, users.role
-        FROM users
-        WHERE email = $1`,
-        [req.body.email]
-    );
+    // // Check if user exists
+    // const userQuery = await pool.query(
+    //     `SELECT users.id, users.name, users.email, users.password_hash, users.role
+    //     FROM users
+    //     WHERE email = $1`,
+    //     [req.body.email]
+    // );
 
     // Check if user is logged in
-    if (!req.cookies.access_token) {
+    if (!req.cookies.access_token && !req.cookies.refresh_token) {
         res.status(401).json({ message: "User not logged in!" });
         return;
     }
     // Clear access and refresh tokens for this specific user
-    const userId = userQuery.rows[0].id;
+    // const user = userQuery.rows[0];
 
-    res.cookie('access_token', "", {
+    res.clearCookie('access_token', {
         httpOnly: true,
         secure: process.env.NODE_ENV !== "development",
         sameSite: "strict",
-        expires: new Date(0) // Expire immediately
+        // expires: new Date(0) // Expire immediately
     });
 
-    res.cookie('refresh_token', "", {
+    res.clearCookie('refresh_token', {
         httpOnly: true,
         secure: process.env.NODE_ENV !== "development",
         sameSite: "strict",
-        expires: new Date(0) // Expire immediately
+        // expires: new Date(0) // Expire immediately
     });
+
+    res.status(200).json({ message: "User logged out successfully" });
+
     // Optionally, you can include a response body to confirm the logout
-    res.status(200).json({
-        message: "User logged out successfully",
-        user: {
-            id: userId,
-            email: userQuery.rows[0].email
-        }
-    });
+    // res.status(200).json({
+    //     message: "User logged out successfully",
+    //     user: {
+    //         id: user.id,
+    //         email: user.email
+    //     }
+    // });
+
+
+
 
     // Alternatively, you can clear all cookies if needed
     // res.clearCookie("access_token");

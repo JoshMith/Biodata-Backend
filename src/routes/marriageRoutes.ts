@@ -8,17 +8,17 @@ const router = express.Router()
 
 //Librarian Access
 //Librarians can create, update, and delete books
-router.post("/", createMarriage)
-router.get("/", getMarriage)
-router.get("/:id", getMarriageById)
-router.get("/user/:userId", getMarriageByUserId)
-router.put("/:id", updateMarriage)
+router.post("/",protect,adminClergyGuard, createMarriage)
+router.get("/",protect,adminClergyGuard, getMarriage)
+router.get("/:id",protect,adminClergyGuard, getMarriageById)
+router.get("/user/:userId",protect,adminClergyGuard, getMarriageByUserId)
+router.put("/:id",protect,adminClergyGuard, updateMarriage)
 
 
 
 //Admins can manage all books
 //Admins can create, update, and delete books
-router.delete("/:id", deleteMarriage)
+router.delete("/:id",adminClergyGuard, deleteMarriage)
 
 
 

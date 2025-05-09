@@ -1,27 +1,24 @@
-import express from "express"
-import { addUser, deleteUser, getUserById, getUserByName, getUserCount, getUsers, updateUser} from "../controllers/usersController"
-import { adminClergyGuard, adminGuard,  } from "../middlewares/auth/roleMiddleWare"
-import { protect } from "../middlewares/auth/protect"
+import express from "express";
+import {
+    addUser,
+    deleteUser,
+    getUserById,
+    getUserByName,
+    getUserCount,
+    getUsers,
+    updateUser,
+} from "../controllers/usersController";
+import { protect } from "../middlewares/auth/protect";
+import { adminClergyGuard, adminGuard } from "../middlewares/auth/roleMiddleWare";
 
-//instance of router
-const router = express.Router()
+const router = express.Router();
 
-//
+router.post("/", protect,adminClergyGuard, addUser);
+router.get("/", protect,adminClergyGuard, getUsers);
+router.get("/count", protect,adminClergyGuard, getUserCount);
+router.get("/name/:name", protect,adminClergyGuard, getUserByName);
+router.get("/:id", protect,adminClergyGuard, getUserById);
+router.put("/:id", protect,adminClergyGuard, updateUser);
+router.delete("/:id", protect,adminClergyGuard, deleteUser);
 
-//Librarian can manage all users
-//Librarians can create, update and get users
-router.post("/", addUser)
-router.get("/", getUsers)
-router.get("/count", getUserCount)
-router.get("/:id", getUserById)
-router.get("/name/:name", getUserByName)
-router.put("/:id",updateUser)
-
-//Admins can manage all users
-//Admins can create, update, and delete users
-router.delete("/:id",protect, deleteUser)
-
-
-
-
-export default router
+export default router;

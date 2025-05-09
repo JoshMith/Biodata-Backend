@@ -37,7 +37,7 @@ const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200'];
 
 //CORS middleware
 app.use(cors({
-    origin: "*",
+    origin: allowedOrigins,
     methods: "GET, POST, PUT, PATCH, DELETE",
     credentials: true // allows cookies and auth headers
 }))
@@ -45,23 +45,23 @@ app.use(cors({
 
 
 //4:create the routes
-app.use("/api/users", usersRoutes )
-app.use("/api/auth", authRoutes )
-app.use("/api/baptism", baptismRoutes )
-app.use("/api/eucharist", eucharistRoutes )
-app.use("/api/confirmation", confirmRoutes )
-app.use("/api/marriage", marriageRoutes )
+app.use("/api/users", usersRoutes)
+app.use("/api/auth", authRoutes)
+app.use("/api/baptism", baptismRoutes)
+app.use("/api/eucharist", eucharistRoutes)
+app.use("/api/confirmation", confirmRoutes)
+app.use("/api/marriage", marriageRoutes)
 
 
 app.get('', (req, res) => {
     res.json({ message: "Frontend successfully connected to backend!" });
-  });
+});
 
 
 //5:middlewares after the routes
 app.use(notFound)
 
-  
+
 
 // start the server
 

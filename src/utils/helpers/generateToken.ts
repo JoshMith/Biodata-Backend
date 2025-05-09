@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken'
 dotenv.config()
 
 //Debugging  - check if env var are loaded correctly  
-console.log("JWT_SECRET: ", process.env.JWT_SECRET )
-console.log("REFRESH_TOKEN_SECRET: ", process.env.REFRESH_TOKEN_SECRET )
+// console.log("JWT_SECRET: ", process.env.JWT_SECRET )
+// console.log("REFRESH_TOKEN_SECRET: ", process.env.REFRESH_TOKEN_SECRET )
 
 export const generateToken = (res:Response, userId: string, role: string) => {
     const jwtSecret = process.env.JWT_SECRET;
@@ -24,7 +24,7 @@ export const generateToken = (res:Response, userId: string, role: string) => {
         const refreshToken = jwt.sign({userId}, refreshSecret, {expiresIn: "30d"})
 
         //set Access token as HTTP-Only secure cookie 
-        res.cookie(`access_token_${userId}`, accessToken, {
+        res.cookie("access_token", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV !== "development", // Secure in production
             sameSite: "strict",
@@ -33,7 +33,7 @@ export const generateToken = (res:Response, userId: string, role: string) => {
 
 
          // Set Refresh Token as HTTP-Only Secure Cookie
-         res.cookie(`refresh_token_${userId}`, refreshToken, {
+         res.cookie("refresh_token", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV !== "development",
             sameSite: "strict",
