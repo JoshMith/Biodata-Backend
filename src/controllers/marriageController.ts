@@ -75,10 +75,10 @@ export const getMarriageByUserId = asyncHandler(async (req: Request, res: Respon
         const { userId } = req.params;
         const result = await pool.query("SELECT * FROM marriage WHERE user_id = $1", [userId]);
 
-        if (result.rows.length === 0) {
-            res.status(400).json({ message: "No marriage records found for the given user_id" });
-            return;
-        }
+        // if (result.rows.length === 0) {
+        //     res.status(400).json({ message: "No marriage records found for the given user_id" });
+        //     return;
+        // }
 
         res.json(result.rows);
 
@@ -126,16 +126,12 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 
         values.push(id);
 
-        const query = `
-            UPDATE marriage 
-            SET ${fieldsToUpdate.join(", ")} 
-            WHERE marriage_id = $${index} 
-            RETURNING *`;
+        const query = `UPDATE marriage SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index} RETURNING *`;
 
         const marriageResult = await pool.query(query, values);
 
         if (marriageResult.rows.length === 0) {
-            res.status(400).json({ message: "Marriage record not found" });
+            res.status(400).json({ message: "Marriage record update failed" });
             return;
         }
 

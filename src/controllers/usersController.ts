@@ -48,6 +48,23 @@ export const getUsers = asyncHandler(async (req, res) => {
     }
 })
 
+
+//Get total number of users 
+export const getUserCount = asyncHandler(async (_req: Request, res: Response) => {
+    try {
+        const result = await pool.query(
+            "SELECT COUNT(*) AS usercount FROM users"
+        );
+        const userCount: number = parseInt(result.rows[0].usercount, 10);
+        res.json({ userCount });
+        // console.log("User count:", userCount);
+    } catch (error) {
+        console.error("Error fetching user count:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
 //Get single user by name
 export const getUserByName = asyncHandler(async (req, res) => {
     try {
@@ -86,18 +103,6 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 
 
-//Get total number of users 
-export const getUserCount = asyncHandler(async (req, res) => {
-    try {
-        const result = await pool.query('SELECT COUNT(*) AS userCount FROM users');
-        const count = parseInt(result.rows[0].userCount, 10);
-        res.json({ count });
-        console.log('User count:', count);
-    } catch (error) {
-        console.error("Error fetching user count:", error);
-        res.status(500).json({ message: "Internal server error", error: error });
-    }
-});
 
 //update user
 

@@ -76,15 +76,15 @@ export const getBaptismByUserId = asyncHandler(async (req: Request, res: Respons
         const { userId } = req.params;
         const result = await pool.query("SELECT * FROM baptism WHERE user_id = $1", [userId]);
 
-        if (result.rows.length === 0) {
-            res.status(400).json({ message: "No baptism records found for the given user_id" });
-            return;
-        }
+        // if (result.rows.length === 0) {
+        //     res.status(400).json({ message: "No baptism record found for the given user" });
+        //     return;
+        // }
 
         res.json(result.rows);
 
     } catch (error) {
-        console.error("Error getting baptism records by user_id:", error);
+        console.error("Error getting baptism record by user_id:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -132,6 +132,11 @@ export const updateBaptism = asyncHandler(async (req: Request, res: Response) =>
             `UPDATE baptism SET ${fieldsToUpdate.join(", ")} WHERE baptism_id = $${index} RETURNING *`,
             values
         );
+
+        if (baptismResult.rows.length === 0) {
+            res.status(400).json({ message: "Baptism record update failed" });
+            return;
+        }
 
         res.json({
             message: "Baptism record updated successfully",

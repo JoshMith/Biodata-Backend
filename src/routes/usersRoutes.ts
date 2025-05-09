@@ -12,8 +12,8 @@ const router = express.Router()
 //Librarians can create, update and get users
 router.post("/", addUser)
 router.get("/", getUsers)
-router.get("/:id", getUserById)
 router.get("/count", getUserCount)
+router.get("/:id", getUserById)
 router.get("/name/:name", getUserByName)
 router.put("/:id",updateUser)
 

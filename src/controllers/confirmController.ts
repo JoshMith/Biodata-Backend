@@ -76,10 +76,10 @@ export const getConfirmationByUserId = asyncHandler(async (req: Request, res: Re
         const { userId } = req.params;
         const result = await pool.query("SELECT * FROM confirmation WHERE user_id = $1", [userId]);
 
-        if (result.rows.length === 0) {
-            res.status(400).json({ message: "No confirmation records found for the given user_id" });
-            return;
-        }
+        // if (result.rows.length === 0) {
+        //     res.status(400).json({ message: "No confirmation record found for the given user_id" });
+        //     return;
+        // }
 
         res.json(result.rows);
 
@@ -127,7 +127,7 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
         const confirmationResult = await pool.query(query, values);
 
         if (confirmationResult.rows.length === 0) {
-            res.status(400).json({ message: "Confirmation record not found" });
+            res.status(400).json({ message: "Confirmation record update failed" });
             return;
         }
 

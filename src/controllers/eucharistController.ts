@@ -21,7 +21,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
         }
 
         // Proceed to create eucharist
-        const baptismResult = await pool.query(
+        const eucharistResult = await pool.query(
             `INSERT INTO eucharist(eucharist_place, eucharist_date, user_id) 
              VALUES ($1, $2, $3) RETURNING *`,
             [eucharist_place, eucharist_date, user_id]
@@ -76,10 +76,10 @@ export const getEucharistByUserId = asyncHandler(async (req: Request, res: Respo
         const { userId } = req.params;
         const result = await pool.query("SELECT * FROM eucharist WHERE user_id = $1", [userId]);
 
-        if (result.rows.length === 0) {
-            res.status(400).json({ message: "No eucharist records found for the given user_id" });
-            return;
-        }
+        // if (result.rows.length === 0) {
+        //     res.status(400).json({ message: "No eucharist records found for the given user_id" });
+        //     return;
+        // }
 
         res.json(result.rows);
 
@@ -95,23 +95,41 @@ export const updateEucharist = asyncHandler(async (req: Request, res: Response) 
         const { id } = req.params;
         const { eucharist_place, eucharist_date, user_id } = req.body;
 
-        const eucharistResult = await pool.query(
-            `UPDATE eucharist SET 
-                eucharist_place = COALESCE($1, eucharist_place), 
-                eucharist_date = COALESCE($2, eucharist_date), 
-                user_id = COALESCE($3, user_id)
-             WHERE eucharist_id = $4 RETURNING *`,
-            [eucharist_place, eucharist_date, user_id, id]
-        );
+        const fieldsToUpdate = [];
+        const values = [];
+        let index = 1;
+
+        if (eucharist_place) {
+            fieldsToUpdate.push(`eucharist_place = $${index++}`);
+            values.push(eucharist_place);
+        }
+        if (eucharist_date) {
+            fieldsToUpdate.push(`eucharist_date = $${index++}`);
+            values.push(eucharist_date);
+        }
+        if (user_id) {
+            fieldsToUpdate.push(`user_id = $${index++}`);
+            values.push(user_id);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            res.status(400).json({ message: "No fields provided for update" });
+            return;
+        }
+
+        values.push(id);
+        const query = `UPDATE eucharist SET ${fieldsToUpdate.join(", ")} WHERE eucharist_id = $${index} RETURNING *`;
+
+        const eucharistResult = await pool.query(query, values);
 
         if (eucharistResult.rows.length === 0) {
-            res.status(400).json({ message: "Eucharist record not found" });
+            res.status(400).json({ message: "Eucharist record update failed" });
             return;
         }
 
         res.json({
             message: "Eucharist record updated successfully",
-            event: eucharistResult.rows[0]
+            eucharist: eucharistResult.rows[0]
         });
 
     } catch (error) {
