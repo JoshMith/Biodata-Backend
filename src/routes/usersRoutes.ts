@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.post("/", protect,adminClergyGuard, addUser);
 router.get("/", protect,adminClergyGuard, getUsers);
-router.get("/count", protect,adminClergyGuard, getUserCount);
+router.get("/count", protect, getUserCount);
 router.get("/name/:name", protect,adminClergyGuard, getUserByName);
 router.get("/:id", protect,adminClergyGuard, getUserById);
 router.put("/:id", protect,adminClergyGuard, updateUser);

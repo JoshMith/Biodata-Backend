@@ -65,10 +65,10 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     }
 
     // ✅ Only allow Admin and Clergy to login
-    if (user.role !== "Admin" && user.role !== "Clergy") {
-        res.status(403).json({ message: "Access denied: Insufficient permissions. Only Admins and Clergy allowed!" });
-        return;
-    }
+    // if (user.role !== "Admin" && user.role !== "Clergy") {
+    //     res.status(403).json({ message: "Access denied: Insufficient permissions. Only Admins and Clergy allowed!" });
+    //     return;
+    // }
 
     // // Check if the user is already logged in (via the cookie)
     // if (req.cookies.access_token) {
