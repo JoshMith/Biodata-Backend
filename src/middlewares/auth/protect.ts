@@ -10,12 +10,13 @@ import pool from "../../config/db.config"
 export const protect = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction) => {
     let token;
 
-    //trying to get token from Authorization Header 
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-        token = req.headers.authorization.split(" ")[1];
+    //trying to get token from Authorization Header
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer")){
+        token = authHeader.split(" ")[1];
     }
 
-    //get the token from cookies 
+    //get the token from cookies
     if (!token && req.cookies?.access_token) {
         token = req.cookies.access_token;
     }
