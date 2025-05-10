@@ -9,6 +9,14 @@ const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    ssl: {
+        rejectUnauthorized: false, // Required for Render
+    },
 })
+
+// pool.connect()
+//     .then(() => console.log("✅ Connected to PostgreSQL"))
+//     .catch(err => console.error("❌ Connection error:", err));
+
 
 export default pool
