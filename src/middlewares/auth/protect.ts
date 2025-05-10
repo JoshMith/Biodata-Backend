@@ -10,16 +10,18 @@ import pool from "../../config/db.config"
 export const protect = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction) => {
     let token;
 
-    //trying to get token from Authorization Header
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer")){
-        token = authHeader.split(" ")[1];
-    }
-
     //get the token from cookies
     if (!token && req.cookies?.access_token) {
         token = req.cookies.access_token;
     }
+
+    //trying to get token from Authorization Header
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer")) {
+        token = authHeader.split(" ")[1];
+    }
+
+
 
     //if no token found
     if (!token) {
@@ -42,7 +44,7 @@ export const protect = asyncHandler(async (req: UserRequest, res: Response, next
             [decoded.userId]
         );
 
-        
+
         if (userQuery.rows.length === 0) {
             res.status(401).json({ message: "User not found" });
             return;
