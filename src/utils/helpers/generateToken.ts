@@ -26,8 +26,8 @@ export const generateToken = (res: Response, userId: string, role: string) => {
         //set Access token as HTTP-Only secure cookie 
         res.cookie("access_token", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== "development", // Secure in production
-            sameSite: "strict",
+            secure: true, // Secure in production
+            sameSite: "none",
             maxAge: 60 * 60 * 1000, // 60 minutes
         });
 
@@ -35,8 +35,8 @@ export const generateToken = (res: Response, userId: string, role: string) => {
         // Set Refresh Token as HTTP-Only Secure Cookie
         res.cookie("refresh_token", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== "development",
-            sameSite: "strict",
+            secure: true,
+            sameSite: "none",
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         });
 
