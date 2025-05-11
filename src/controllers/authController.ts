@@ -11,7 +11,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
 
     if (userExists.rows.length > 0) {
-        res.status(400).json({ message: "User already exists" });
+        res.status(400).json({ message: "User already exists. Go to login..." });
         return;
     }
 
