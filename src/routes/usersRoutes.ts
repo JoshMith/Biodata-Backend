@@ -14,11 +14,14 @@ import { adminClergyGuard, adminGuard } from "../middlewares/auth/roleMiddleWare
 const router = express.Router();
 
 router.post("/", protect,adminClergyGuard, addUser);
+// router.post("/", addUser);
 router.get("/", protect,adminClergyGuard, getUsers);
 router.get("/count", protect, getUserCount);
 router.get("/name/:name", protect,adminClergyGuard, getUserByName);
 router.get("/:id", protect,adminClergyGuard, getUserById);
 router.put("/:id", protect,adminClergyGuard, updateUser);
 router.delete("/:id", protect,adminClergyGuard, deleteUser);
+// router.delete("/:id",deleteUser);
+
 
 export default router;

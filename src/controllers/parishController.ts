@@ -1,0 +1,108 @@
+import { Request, Response } from "express"
+import pool from "../config/db.config"
+import asyncHandler from "../middlewares/asyncHandler"
+
+// Controllers for parish-related operations
+
+// Create a new parish
+export const createParish = asyncHandler(async (req: Request, res: Response) => {
+    const { parish_name, deanery } = req.body
+    if (!parish_name || !deanery) {
+        return res.status(400).json({ message: "parish_name and deanery are required" })
+    }
+    const result = await pool.query(
+        "INSERT INTO parish (parish_name, deanery) VALUES ($1, $2) RETURNING *",
+        [parish_name, deanery]
+    )
+    res.status(201).json(result.rows[0])
+})
+
+
+
+// Get all parishes
+export const getAllParishes = asyncHandler(async (req: Request, res: Response) => {
+    const result = await pool.query("SELECT * FROM parish")
+    res.json(result.rows)
+})
+
+// Get parish by ID
+export const getParishById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params
+    const result = await pool.query(
+        "SELECT * FROM parish WHERE parish_id = $1",
+        [id]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Parish not found" })
+    }
+    res.json(result.rows[0])
+})
+
+
+// Get parish by name
+export const getParishByName = asyncHandler(async (req: Request, res: Response) => {
+    const { name } = req.params
+    const result = await pool.query(
+        "SELECT * FROM parish WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
+        [name]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Parish not found" })
+    }
+    res.json(result.rows[0])
+})
+
+// Get parishes by deanery
+export const getParishesByDeanery = asyncHandler(async (req: Request, res: Response) => {
+    const { deanery } = req.params
+    const result = await pool.query(
+        "SELECT * FROM parish WHERE to_tsvector(deanery) @@ plainto_tsquery($1)",
+        [deanery]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "No parishes found for this deanery" })
+    }
+    res.json(result.rows)
+})
+
+// Update parish by PATCH
+export const updateParish = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params
+    const fields = []
+    const values = []
+    let idx = 1
+
+    if (req.body.parish_name) {
+        fields.push(`parish_name = $${idx++}`)
+        values.push(req.body.parish_name)
+    }
+    if (req.body.deanery) {
+        fields.push(`deanery = $${idx++}`)
+        values.push(req.body.deanery)
+    }
+    if (fields.length === 0) {
+        return res.status(400).json({ message: "No fields to update" })
+    }
+    values.push(id)
+    const result = await pool.query(
+        `UPDATE parish SET ${fields.join(", ")} WHERE parish_id = $${idx} RETURNING *`,
+        values
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Parish not found" })
+    }
+    res.json(result.rows[0])
+})
+
+// Delete parish
+export const deleteParish = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params
+    const result = await pool.query(
+        "DELETE FROM parish WHERE parish_id = $1 RETURNING *",
+        [id]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Parish not found" })
+    }
+    res.json({ message: "Parish deleted successfully" })
+})

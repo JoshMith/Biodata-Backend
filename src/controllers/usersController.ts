@@ -7,7 +7,7 @@ import bcrypt from "bcrypt"
 // Add a new user
 export const addUser = asyncHandler(async (req, res) => {
     try {
-        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence } = req.body;
+        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_id } = req.body;
 
         // Check if email already exists
         const emailCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -16,14 +16,23 @@ export const addUser = asyncHandler(async (req, res) => {
             return;
         }
 
+        // Optionally, check if parish_id exists in parish table
+        // if (parish_id) {
+        //     const parishResult = await pool.query("SELECT parish_id FROM parish WHERE parish_id = $1", [parish_id]);
+        //     if (parishResult.rows.length === 0) {
+        //         res.status(400).json({ message: "Parish not found" });
+        //         return;
+        //     }
+        // }
+
         // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Insert the new user
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password_hash, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
-            [name, email, hashedPassword, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence]
+            "INSERT INTO users (name, email, password_hash, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *",
+            [name, email, hashedPassword, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_id]
         );
 
         res.status(201).json({
@@ -109,7 +118,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence } = req.body;
+        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_name } = req.body;
 
         // Check if user exists
         const userCheck = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
@@ -173,6 +182,24 @@ export const updateUser = asyncHandler(async (req, res) => {
             fieldsToUpdate.push(`residence=$${index++}`);
             values.push(residence);
         }
+        if (deanery) {
+            fieldsToUpdate.push(`deanery=$${index++}`);
+            values.push(deanery);
+        }
+        if (parish_name) {
+            // Get parish_id from parish_name using full-text search
+            const parishResult = await pool.query(
+                "SELECT parish_id FROM parish WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
+                [parish_name]
+            );
+            if (parishResult.rows.length === 0) {
+                res.status(400).json({ message: "Parish not found" });
+                return;
+            }
+            const parishId = parishResult.rows[0].parish_id;
+            fieldsToUpdate.push(`parish_id=$${index++}`);
+            values.push(parishId);
+        }
 
         if (fieldsToUpdate.length === 0) {
             res.status(400).json({ message: "No fields to update" });
@@ -197,8 +224,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
-
-//delete user  
+//delete user
 export const deleteUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params

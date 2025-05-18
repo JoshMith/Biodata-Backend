@@ -9,9 +9,11 @@ const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: false, // Required for Render
-    },
+
+    // For local development, comment out the ssl option
+    // ssl: {
+    //     rejectUnauthorized: false, // Required for Render
+    // },
 })
 
 export default pool

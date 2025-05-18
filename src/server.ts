@@ -18,6 +18,7 @@ import baptismRoutes from "./routes/baptismRoutes"
 import eucharistRoutes from "./routes/eucharistRoutes"
 import confirmRoutes from "./routes/confirmRoutes"
 import marriageRoutes from "./routes/marriageRoutes"
+import parishRoutes from "./routes/parishRoutes"
 
 //1:configure the dotenv
 dotenv.config()
@@ -51,6 +52,7 @@ app.use("/api/baptism", baptismRoutes)
 app.use("/api/eucharist", eucharistRoutes)
 app.use("/api/confirmation", confirmRoutes)
 app.use("/api/marriage", marriageRoutes)
+app.use("/api/parish", parishRoutes)
 
 
 app.get('', (req, res) => {
