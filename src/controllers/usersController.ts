@@ -118,7 +118,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_name } = req.body;
+        const { name, email, password, role, father, mother, tribe, clan, birth_place, birth_date, sub_county, residence, deanery, parish_id } = req.body;
 
         // Check if user exists
         const userCheck = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
@@ -186,19 +186,9 @@ export const updateUser = asyncHandler(async (req, res) => {
             fieldsToUpdate.push(`deanery=$${index++}`);
             values.push(deanery);
         }
-        if (parish_name) {
-            // Get parish_id from parish_name using full-text search
-            const parishResult = await pool.query(
-                "SELECT parish_id FROM parish WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
-                [parish_name]
-            );
-            if (parishResult.rows.length === 0) {
-                res.status(400).json({ message: "Parish not found" });
-                return;
-            }
-            const parishId = parishResult.rows[0].parish_id;
+        if (parish_id) {
             fieldsToUpdate.push(`parish_id=$${index++}`);
-            values.push(parishId);
+            values.push(parish_id);
         }
 
         if (fieldsToUpdate.length === 0) {

@@ -16,9 +16,17 @@ export const roleGuard = (allowedRoles: string[], ...args: string[]) =>
 
 
 // // Specific guards
-export const adminGuard = roleGuard(["Admin"]);
-export const clergyGuard = roleGuard(["Clergy"]);
-export const memberGuard = roleGuard(["Member"]);
-export const adminClergyGuard = roleGuard(["Admin" , "Clergy"]);
-export const allGuard = roleGuard(["Admin", "Clergy", "Member"]);
-
+export const adminGuard = roleGuard(["admin"]);
+export const archbishopGuard = roleGuard(["archbishop"]);
+export const deanGuard = roleGuard(["dean"]);
+export const clerkGuard = roleGuard(["clerk"]);
+export const priestGuard = roleGuard(["priest"]);
+export const memberGuard = roleGuard(["member"]);
+export const allGuard = roleGuard([
+    "admin",
+    "archbishop",
+    "dean",
+    "clerk",
+    "priest",
+    "member"
+]);

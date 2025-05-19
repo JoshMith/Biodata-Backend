@@ -5,7 +5,7 @@ import { generateToken } from "../utils/helpers/generateToken";
 import asyncHandler from "../middlewares/asyncHandler";
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role } = req.body
+    const { name, email, password, role, deanery, parish_id } = req.body
 
     // Check if user exists
     const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -21,8 +21,8 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
     //insert into users table
     const newUser = await pool.query(
-        "INSERT INTO users (name, email, password_hash, role) VALUES ($1,$2,$3,$4) RETURNING *",
-        [name, email, hashedPassword, role]
+        "INSERT INTO users (name, email, password_hash, role, deanery, parish_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+        [name, email, hashedPassword, role, deanery, parish_id]
     );
 
 
@@ -43,7 +43,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
     // Check if user exists in the database
     const userQuery = await pool.query(
-        `SELECT users.id, users.name, users.email, users.password_hash, users.role
+        `SELECT users.id, users.name, users.email, users.password_hash, users.role, users.deanery, users.parish_id
         FROM users
         WHERE email = $1`,
         [email]
@@ -86,6 +86,8 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
             name: user.name,
             email: user.email,
             role: user.role,
+            deanery: user.deanery,
+            parishId: user.parish_id,
         }
     });
 });
