@@ -10,10 +10,10 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
 
-    // For local development, comment out the ssl option
-    // ssl: {
-    //     rejectUnauthorized: false, // Required for Render
-    // },
+    For local development, comment out the ssl option
+    ssl: {
+        rejectUnauthorized: false, // Required for Render
+    },
 })
 
 export default pool
