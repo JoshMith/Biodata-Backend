@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 app.use(cookieParser())
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200', 'https://christian-biodata-frontend.vercel.app'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200', 'https://christian-biodata.vercel.app'];
 
 //CORS middleware
 app.use(cors({
