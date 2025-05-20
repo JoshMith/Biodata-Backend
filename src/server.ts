@@ -114,7 +114,7 @@ app.get('', (req, res) => {
                 <p>Your backend server is up and running!</p>
                 <span class="badge">Status: Online</span>
                 <p style="margin-top:2rem;">
-                    <a href="https://github.com/your-org/ccb-sys" target="_blank">View on GitHub</a>
+                    <a href="https://christian-biodata-git-main-joshmiths-projects.vercel.app" target="_blank">View Site</a>
                 </p>
             </div>
         </body>
