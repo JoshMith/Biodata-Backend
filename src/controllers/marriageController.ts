@@ -172,83 +172,83 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         const values: any[] = [];
         let index = 1;
 
-        if (user_id !== undefined) {
+        if (user_id ) {
             fieldsToUpdate.push(`user_id = $${index++}`);
             values.push(user_id);
         }
-        if (marriage_date !== undefined) {
+        if (marriage_date ) {
             fieldsToUpdate.push(`marriage_date = $${index++}`);
             values.push(marriage_date);
         }
-        if (marriage_certificate_no !== undefined) {
+        if (marriage_certificate_no ) {
             fieldsToUpdate.push(`marriage_certificate_no = $${index++}`);
             values.push(marriage_certificate_no);
         }
-        if (entry_no !== undefined) {
+        if (entry_no ) {
             fieldsToUpdate.push(`entry_no = $${index++}`);
             values.push(entry_no);
         }
-        if (county !== undefined) {
+        if (county ) {
             fieldsToUpdate.push(`county = $${index++}`);
             values.push(county);
         }
-        if (sub_county !== undefined) {
+        if (sub_county ) {
             fieldsToUpdate.push(`sub_county = $${index++}`);
             values.push(sub_county);
         }
-        if (place_of_marriage !== undefined) {
+        if (place_of_marriage ) {
             fieldsToUpdate.push(`place_of_marriage = $${index++}`);
             values.push(place_of_marriage);
         }
-        if (name1 !== undefined) {
+        if (name1 ) {
             fieldsToUpdate.push(`name1 = $${index++}`);
             values.push(name1);
         }
-        if (age1 !== undefined) {
+        if (age1 ) {
             fieldsToUpdate.push(`age1 = $${index++}`);
             values.push(age1);
         }
-        if (marital_status1 !== undefined) {
+        if (marital_status1 ) {
             fieldsToUpdate.push(`marital_status1 = $${index++}`);
             values.push(marital_status1);
         }
-        if (occupation1 !== undefined) {
+        if (occupation1 ) {
             fieldsToUpdate.push(`occupation1 = $${index++}`);
             values.push(occupation1);
         }
-        if (residence1 !== undefined) {
+        if (residence1 ) {
             fieldsToUpdate.push(`residence1 = $${index++}`);
             values.push(residence1);
         }
-        if (name2 !== undefined) {
+        if (name2 ) {
             fieldsToUpdate.push(`name2 = $${index++}`);
             values.push(name2);
         }
-        if (age2 !== undefined) {
+        if (age2 ) {
             fieldsToUpdate.push(`age2 = $${index++}`);
             values.push(age2);
         }
-        if (marital_status2 !== undefined) {
+        if (marital_status2 ) {
             fieldsToUpdate.push(`marital_status2 = $${index++}`);
             values.push(marital_status2);
         }
-        if (occupation2 !== undefined) {
+        if (occupation2 ) {
             fieldsToUpdate.push(`occupation2 = $${index++}`);
             values.push(occupation2);
         }
-        if (residence2 !== undefined) {
+        if (residence2 ) {
             fieldsToUpdate.push(`residence2 = $${index++}`);
             values.push(residence2);
         }
-        if (witnessed_by !== undefined) {
+        if (witnessed_by ) {
             fieldsToUpdate.push(`witnessed_by = $${index++}`);
             values.push(witnessed_by);
         }
-        if (registrar !== undefined) {
+        if (registrar ) {
             fieldsToUpdate.push(`registrar = $${index++}`);
             values.push(registrar);
         }
-        if (ref_number !== undefined) {
+        if (ref_number ) {
             fieldsToUpdate.push(`ref_number = $${index++}`);
             values.push(ref_number);
         }
