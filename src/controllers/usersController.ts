@@ -15,16 +15,6 @@ export const addUser = asyncHandler(async (req, res) => {
             res.status(400).json({ message: "Email already in use" });
             return;
         }
-
-        // Optionally, check if parish_id exists in parish table
-        // if (parish_id) {
-        //     const parishResult = await pool.query("SELECT parish_id FROM parish WHERE parish_id = $1", [parish_id]);
-        //     if (parishResult.rows.length === 0) {
-        //         res.status(400).json({ message: "Parish not found" });
-        //         return;
-        //     }
-        // }
-
         // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
