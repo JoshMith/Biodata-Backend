@@ -168,98 +168,99 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             ref_number
         } = req.body;
 
-        const fieldsToUpdate: string[] = [];
-        const values: any[] = [];
+        const fieldsToUpdate = [];
+        const values = [];
         let index = 1;
 
-        if (user_id ) {
-            fieldsToUpdate.push(`user_id = $${index++}`);
-            values.push(user_id);
-        }
-        if (marriage_date ) {
+        if (marriage_date) {
             fieldsToUpdate.push(`marriage_date = $${index++}`);
             values.push(marriage_date);
         }
-        if (marriage_certificate_no ) {
+        if (marriage_certificate_no) {
             fieldsToUpdate.push(`marriage_certificate_no = $${index++}`);
             values.push(marriage_certificate_no);
         }
-        if (entry_no ) {
+        if (entry_no) {
             fieldsToUpdate.push(`entry_no = $${index++}`);
             values.push(entry_no);
         }
-        if (county ) {
+        if (county) {
             fieldsToUpdate.push(`county = $${index++}`);
             values.push(county);
         }
-        if (sub_county ) {
+        if (sub_county) {
             fieldsToUpdate.push(`sub_county = $${index++}`);
             values.push(sub_county);
         }
-        if (place_of_marriage ) {
+        if (place_of_marriage) {
             fieldsToUpdate.push(`place_of_marriage = $${index++}`);
             values.push(place_of_marriage);
         }
-        if (name1 ) {
+        if (name1) {
             fieldsToUpdate.push(`name1 = $${index++}`);
             values.push(name1);
         }
-        if (age1 ) {
+        if (age1) {
             fieldsToUpdate.push(`age1 = $${index++}`);
             values.push(age1);
         }
-        if (marital_status1 ) {
+        if (marital_status1) {
             fieldsToUpdate.push(`marital_status1 = $${index++}`);
             values.push(marital_status1);
         }
-        if (occupation1 ) {
+        if (occupation1) {
             fieldsToUpdate.push(`occupation1 = $${index++}`);
             values.push(occupation1);
         }
-        if (residence1 ) {
+        if (residence1) {
             fieldsToUpdate.push(`residence1 = $${index++}`);
             values.push(residence1);
         }
-        if (name2 ) {
+        if (name2) {
             fieldsToUpdate.push(`name2 = $${index++}`);
             values.push(name2);
         }
-        if (age2 ) {
+        if (age2) {
             fieldsToUpdate.push(`age2 = $${index++}`);
             values.push(age2);
         }
-        if (marital_status2 ) {
+        if (marital_status2) {
             fieldsToUpdate.push(`marital_status2 = $${index++}`);
             values.push(marital_status2);
         }
-        if (occupation2 ) {
+        if (occupation2) {
             fieldsToUpdate.push(`occupation2 = $${index++}`);
             values.push(occupation2);
         }
-        if (residence2 ) {
+        if (residence2) {
             fieldsToUpdate.push(`residence2 = $${index++}`);
             values.push(residence2);
         }
-        if (witnessed_by ) {
+        if (witnessed_by) {
             fieldsToUpdate.push(`witnessed_by = $${index++}`);
             values.push(witnessed_by);
         }
-        if (registrar ) {
+        if (registrar) {
             fieldsToUpdate.push(`registrar = $${index++}`);
             values.push(registrar);
         }
-        if (ref_number ) {
+        if (ref_number) {
             fieldsToUpdate.push(`ref_number = $${index++}`);
             values.push(ref_number);
         }
+
+        if (user_id) {
+            fieldsToUpdate.push(`user_id = $${index++}`);
+            values.push(user_id);
+        }
+        // Check if there are any fields to update
 
         if (fieldsToUpdate.length === 0) {
             res.status(400).json({ message: "No fields provided for update" });
             return;
         }
 
-        values.push(id);
-
+        values.push(id); // Add the marriage_id at the end for the WHERE clause
         const query = `UPDATE marriage SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index} RETURNING *`;
 
         const marriageResult = await pool.query(query, values);
