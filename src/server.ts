@@ -46,13 +46,13 @@ app.use(cors({
 
 
 //4:create the routes
-app.use("/api/users", usersRoutes)
-app.use("/api/auth", authRoutes)
-app.use("/api/baptism", baptismRoutes)
-app.use("/api/eucharist", eucharistRoutes)
-app.use("/api/confirmation", confirmRoutes)
-app.use("/api/marriage", marriageRoutes)
-app.use("/api/parish", parishRoutes)
+app.use("/users", usersRoutes)
+app.use("/auth", authRoutes)
+app.use("/baptism", baptismRoutes)
+app.use("/eucharist", eucharistRoutes)
+app.use("/confirmation", confirmRoutes)
+app.use("/marriage", marriageRoutes)
+app.use("/parish", parishRoutes)
 
 
 app.get('', (req, res) => {

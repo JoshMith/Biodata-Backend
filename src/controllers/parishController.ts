@@ -6,13 +6,13 @@ import asyncHandler from "../middlewares/asyncHandler"
 
 // Create a new parish
 export const createParish = asyncHandler(async (req: Request, res: Response) => {
-    const { parish_name, deanery } = req.body
-    if (!parish_name || !deanery) {
+    const { parish_name } = req.body
+    if (!parish_name ) {
         return res.status(400).json({ message: "parish_name and deanery are required" })
     }
     const result = await pool.query(
         "INSERT INTO parish (parish_name, deanery) VALUES ($1, $2) RETURNING *",
-        [parish_name, deanery]
+        [parish_name]
     )
     res.status(201).json(result.rows[0])
 })
@@ -52,18 +52,6 @@ export const getParishByName = asyncHandler(async (req: Request, res: Response) 
     res.json(result.rows[0])
 })
 
-// Get parishes by deanery
-export const getParishesByDeanery = asyncHandler(async (req: Request, res: Response) => {
-    const { deanery } = req.params
-    const result = await pool.query(
-        "SELECT * FROM parish WHERE to_tsvector(deanery) @@ plainto_tsquery($1)",
-        [deanery]
-    )
-    if (result.rows.length === 0) {
-        return res.status(404).json({ message: "No parishes found for this deanery" })
-    }
-    res.json(result.rows)
-})
 
 // Update parish by PATCH
 export const updateParish = asyncHandler(async (req: Request, res: Response) => {
@@ -75,10 +63,6 @@ export const updateParish = asyncHandler(async (req: Request, res: Response) => 
     if (req.body.parish_name) {
         fields.push(`parish_name = $${idx++}`)
         values.push(req.body.parish_name)
-    }
-    if (req.body.deanery) {
-        fields.push(`deanery = $${idx++}`)
-        values.push(req.body.deanery)
     }
     if (fields.length === 0) {
         return res.status(400).json({ message: "No fields to update" })

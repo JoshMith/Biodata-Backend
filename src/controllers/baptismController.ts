@@ -3,33 +3,32 @@ import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 
 //This will handle all baptism-related operations 
-//Create baptism
+// Create baptism
 export const createBaptism = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const { id } = req.params
-        const { baptism_place, baptism_date, baptised_by, administrator, user_id } = req.body;
+        const { user_id, parish, baptism_date, minister, sponsor } = req.body;
 
-        // First, dynamically verify the baptism record exists:
+        // Optionally, check if a baptism record already exists for this user
         const baptismCheck = await pool.query(
-            "SELECT baptism_id FROM baptism WHERE baptism_id = $1",
-            [id]
+            "SELECT baptism_id FROM baptism WHERE user_id = $1",
+            [user_id]
         );
 
         if (baptismCheck.rows.length > 0) {
-            res.status(400).json({ message: "Baptism record exists" });
-            return
+            res.status(400).json({ message: "Baptism record for this user already exists" });
+            return;
         }
 
         // Proceed to create baptism
         const baptismResult = await pool.query(
-            `INSERT INTO baptism(baptism_place, baptism_date, baptised_by, administrator, user_id) 
+            `INSERT INTO baptism(user_id, parish, baptism_date, minister, sponsor) 
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [baptism_place, baptism_date, baptised_by, administrator, user_id]
+            [user_id, parish, baptism_date, minister, sponsor]
         );
 
         res.status(201).json({
             message: "Baptism record created successfully",
-            event: baptismCheck.rows[0]
+            baptism: baptismResult.rows[0]
         });
 
     } catch (error) {
@@ -89,32 +88,31 @@ export const getBaptismByUserId = asyncHandler(async (req: Request, res: Respons
     }
 });
 
-
 // Update baptism
 export const updateBaptism = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { baptism_place, baptism_date, baptised_by, administrator, user_id } = req.body;
+        const { parish, baptism_date, minister, sponsor, user_id } = req.body;
 
         const fieldsToUpdate = [];
         const values = [];
         let index = 1;
 
-        if (baptism_place) {
-            fieldsToUpdate.push(`baptism_place = $${index++}`);
-            values.push(baptism_place);
+        if (parish) {
+            fieldsToUpdate.push(`parish = $${index++}`);
+            values.push(parish);
         }
         if (baptism_date) {
             fieldsToUpdate.push(`baptism_date = $${index++}`);
             values.push(baptism_date);
         }
-        if (baptised_by) {
-            fieldsToUpdate.push(`baptised_by = $${index++}`);
-            values.push(baptised_by);
+        if (minister) {
+            fieldsToUpdate.push(`minister = $${index++}`);
+            values.push(minister);
         }
-        if (administrator) {
-            fieldsToUpdate.push(`administrator = $${index++}`);
-            values.push(administrator);
+        if (sponsor) {
+            fieldsToUpdate.push(`sponsor = $${index++}`);
+            values.push(sponsor);
         }
         if (user_id) {
             fieldsToUpdate.push(`user_id = $${index++}`);

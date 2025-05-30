@@ -6,30 +6,29 @@ import asyncHandler from "../middlewares/asyncHandler"
 //Create confirmation
 export const createConfirmation = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const { id } = req.params
-        const { confirmation_place, confirmation_date, confirmation_no, user_id } = req.body;
+        const { confirmation_place, confirmation_date, confirmation_no, user_id, minister } = req.body;
 
-        // First, dynamically verify the confirmation record exists:
-        const confirmationCheck = await pool.query(
-            "SELECT confirmation_id FROM confirmation WHERE confirmation_id = $1",
-            [id]
+        // Optionally, check for duplicate confirmation_no for the same user
+        const duplicateCheck = await pool.query(
+            "SELECT confirmation_id FROM confirmation WHERE confirmation_no = $1 AND user_id = $2",
+            [confirmation_no, user_id]
         );
 
-        if (confirmationCheck.rows.length > 0) {
-            res.status(400).json({ message: "Confirmation record exists" });
-            return
+        if (duplicateCheck.rows.length > 0) {
+            res.status(400).json({ message: "Confirmation record already exists for this user and number" });
+            return;
         }
 
         // Proceed to create confirmation
         const confirmationResult = await pool.query(
-            `INSERT INTO confirmation(confirmation_place, confirmation_date, confirmation_no, user_id ) 
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [confirmation_place, confirmation_date, confirmation_no, user_id ]
+            `INSERT INTO confirmation(confirmation_place, confirmation_date, confirmation_no, user_id, minister) 
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [confirmation_place, confirmation_date, confirmation_no, user_id, minister]
         );
 
         res.status(201).json({
             message: "Confirmation record created successfully",
-            event: confirmationCheck.rows[0]
+            confirmation: confirmationResult.rows[0]
         });
 
     } catch (error) {
@@ -88,12 +87,11 @@ export const getConfirmationByUserId = asyncHandler(async (req: Request, res: Re
         res.status(500).json({ message: "Internal server error" });
     }
 });
-
 // Update confirmation
 export const updateConfirmation = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { confirmation_place, confirmation_date, confirmation_no, user_id } = req.body;
+        const { confirmation_place, confirmation_date, confirmation_no, user_id, minister } = req.body;
 
         const fieldsToUpdate = [];
         const values = [];
@@ -111,10 +109,15 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
             fieldsToUpdate.push(`confirmation_no = $${index++}`);
             values.push(confirmation_no);
         }
+        if (minister) {
+            fieldsToUpdate.push(`minister = $${index++}`);
+            values.push(minister);
+        }
         if (user_id) {
             fieldsToUpdate.push(`user_id = $${index++}`);
             values.push(user_id);
         }
+        
 
         if (fieldsToUpdate.length === 0) {
             res.status(400).json({ message: "No fields provided for update" });

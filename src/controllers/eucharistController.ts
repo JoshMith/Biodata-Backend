@@ -6,18 +6,18 @@ import asyncHandler from "../middlewares/asyncHandler"
 //Create eucharist
 export const createEucharist = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const { id } = req.params
         const { eucharist_place, eucharist_date, user_id } = req.body;
 
-        // First, dynamically verify the eucharist record exists:
+        // Optional: Check if a eucharist record already exists for this user and date/place
+        // (Remove or adjust this logic as needed for your business rules)
         const eucharistCheck = await pool.query(
-            "SELECT eucharist_id FROM eucharist WHERE eucharist_id = $1",
-            [id]
+            "SELECT eucharist_id FROM eucharist WHERE user_id = $1 AND eucharist_date = $2",
+            [user_id, eucharist_date]
         );
 
         if (eucharistCheck.rows.length > 0) {
-            res.status(400).json({ message: "Eucharist record exists" });
-            return
+            res.status(400).json({ message: "Eucharist record already exists for this user and date" });
+            return;
         }
 
         // Proceed to create eucharist
@@ -29,7 +29,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 
         res.status(201).json({
             message: "Eucharist record created successfully",
-            event: eucharistCheck.rows[0]
+            eucharist: eucharistResult.rows[0]
         });
 
     } catch (error) {
