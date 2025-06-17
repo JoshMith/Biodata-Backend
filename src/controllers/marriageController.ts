@@ -1,9 +1,39 @@
 import { Request, Response } from "express"
 import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
+import multer, { FileFilterCallback } from 'multer'
+import path from 'path'
 
-//This will handle all marriage-related operations 
-// Create marriage
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req: any, file: any, cb: (arg0: null, arg1: string) => void) => {
+        cb(null, 'uploads/marriage-certificates/') // Make sure this directory exists
+    },
+    filename: (req: any, file: { originalname: string }, cb: (arg0: null, arg1: string) => void) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, 'marriage-cert-' + uniqueSuffix + path.extname(file.originalname))
+    }
+})
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req: Request, file: Express.Multer.File, callback: FileFilterCallback) => {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (allowedTypes.includes(file.mimetype)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.'));
+        }
+    }
+});
+
+// Middleware for single file upload
+export const uploadMarriageCertificate = upload.single('marriage_certificate')
+
+// Create marriage with file upload support
 export const createMarriage = asyncHandler(async (req: Request, res: Response) => {
     try {
         const {
@@ -29,9 +59,11 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
             first_name_witness2,
             last_name_witness2,
             registrar,
-            ref_number,
-            file_url
+            ref_number
         } = req.body;
+
+        // Get file URL if file was uploaded
+        const file_url = req.file ? `/uploads/marriage-certificates/${req.file.filename}` : null;
 
         // Insert new marriage record
         const marriageResult = await pool.query(
@@ -104,56 +136,7 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
     }
 });
 
-
-//Get All marriages
-export const getMarriage = asyncHandler(async (req: Request, res: Response) => {
-    try {
-        const result = await pool.query("SELECT * FROM marriage ORDER BY marriage_id ASC ");
-        res.json(result.rows);
-    } catch (error) {
-        console.error("Error getting marriage record:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
-
-// Get single marriage
-export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query("SELECT * FROM marriage WHERE marriage_id = $1", [id]);
-
-        if (result.rows.length === 0) {
-            res.status(400).json({ message: "Marriage record not found" });
-            return
-        }
-
-        res.json(result.rows[0]);
-
-    } catch (error) {
-        console.error("Error getting marriage record:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
-
-// Get marriage by user_id
-export const getMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
-    try {
-        const { userId } = req.params;
-        const result = await pool.query("SELECT * FROM marriage WHERE user_id = $1", [userId]);
-
-        // if (result.rows.length === 0) {
-        //     res.status(400).json({ message: "No marriage records found for the given user_id" });
-        //     return;
-        // }
-
-        res.json(result.rows);
-
-    } catch (error) {
-        console.error("Error getting marriage records by user_id:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
-// Update marriage
+// Update marriage with file upload support
 export const updateMarriage = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -180,14 +163,21 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             first_name_witness2,
             last_name_witness2,
             registrar,
-            ref_number,
-            file_url
+            ref_number
         } = req.body;
 
         const fieldsToUpdate = [];
         const values = [];
         let index = 1;
 
+        // Handle file upload
+        if (req.file) {
+            const file_url = `/uploads/marriage-certificates/${req.file.filename}`;
+            fieldsToUpdate.push(`file_url = $${index++}`);
+            values.push(file_url);
+        }
+
+        // Dynamic field updates (same as before)
         if (marriage_date) {
             fieldsToUpdate.push(`marriage_date = $${index++}`);
             values.push(marriage_date);
@@ -276,10 +266,6 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`ref_number = $${index++}`);
             values.push(ref_number);
         }
-        if (file_url) {
-            fieldsToUpdate.push(`file_url = $${index++}`);
-            values.push(file_url);
-        }
         if (user_id) {
             fieldsToUpdate.push(`user_id = $${index++}`);
             values.push(user_id);
@@ -290,7 +276,7 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             return;
         }
 
-        values.push(id); // Add the marriage_id at the end for the WHERE clause
+        values.push(id);
         const query = `UPDATE marriage SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index} RETURNING *`;
 
         const marriageResult = await pool.query(query, values);
@@ -311,8 +297,47 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
     }
 });
 
+// Keep your existing GET and DELETE methods unchanged
+export const getMarriage = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const result = await pool.query("SELECT * FROM marriage ORDER BY marriage_id ASC");
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error getting marriage record:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
-// Delete marriage
+export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query("SELECT * FROM marriage WHERE marriage_id = $1", [id]);
+
+        if (result.rows.length === 0) {
+            res.status(400).json({ message: "Marriage record not found" });
+            return;
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error("Error getting marriage record:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+export const getMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query("SELECT * FROM marriage WHERE user_id = $1", [userId]);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error getting marriage records by user_id:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 export const deleteMarriage = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -324,17 +349,16 @@ export const deleteMarriage = asyncHandler(async (req: Request, res: Response) =
 
         if (marriageResult.rows.length === 0) {
             res.status(400).json({ message: "Marriage record not found" });
-            return
+            return;
         }
 
         res.json({
             message: "Marriage record deleted successfully",
-            book: marriageResult.rows[0]
+            marriage: marriageResult.rows[0]
         });
 
     } catch (error) {
         console.error("Error deleting marriage record:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
-);
+});

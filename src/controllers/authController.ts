@@ -21,16 +21,41 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
     // Insert into users table
     const newUser = await pool.query(
-        `INSERT INTO users 
+        `INSERT INTO users
             (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [first_name, last_name, middle_name, email, hashedPassword, role, phone_number, parish_id]
     );
 
+    const user = newUser.rows[0];
+
+    // Fetch parish name for the user
+    let parishName: string | null = null;
+    if (user.parish_id) {
+        const parishResult = await pool.query(
+            `SELECT parish_name FROM parish WHERE parish_id = $1`,
+            [user.parish_id]
+        );
+        parishName = parishResult.rows[0]?.parish_name || null;
+    }
+
+    // Log the user in immediately after registration
+    await generateToken(res, newUser.rows[0].user_id, newUser.rows[0].role);
+
+
     res.status(201).json({
-        message: "User registered successfully",
-        user: newUser.rows[0]
+        message: "User registered and logged in successfully",
+        user: {
+            id: user.user_id,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            middleName: user.middle_name,
+            email: user.email,
+            role: user.role,
+            parishId: user.parish_id,
+            parishName: parishName,
+        }
     });
 });
 
@@ -61,6 +86,16 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
         return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Fetch parish name for the user
+    let parishName: string | null = null;
+    if (user.parish_id) {
+        const parishResult = await pool.query(
+            `SELECT parish_name FROM parish WHERE parish_id = $1`,
+            [user.parish_id]
+        );
+        parishName = parishResult.rows[0]?.parish_name || null;
+    }
+
     // Generate the JWT token (custom function for token generation)
     await generateToken(res, user.user_id, user.role);
 
@@ -75,6 +110,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
             email: user.email,
             role: user.role,
             parishId: user.parish_id,
+            parishName: parishName,
         }
     });
 });
