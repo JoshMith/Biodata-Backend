@@ -1,5 +1,5 @@
 import express from 'express'
-import { loginUser, logoutUser, registerUser } from '../controllers/authController'
+import { loginUser, logoutUser, registerUser, verifyEmail } from '../controllers/authController'
 import {  adminGuard } from '../middlewares/auth/roleMiddleWare'
 
 const router = express.Router()
@@ -8,6 +8,7 @@ const router = express.Router()
 router.post("/register", registerUser)
 router.post("/login", loginUser)
 router.post("/logout", logoutUser)
+router.get("/verifyEmail",verifyEmail)
 
 
 

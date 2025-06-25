@@ -8,7 +8,7 @@ import bcrypt from "bcrypt"
 export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
-            email,password,role,phone_number,first_name,last_name,middle_name,mother,father,siblings,
+            email,password,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
             birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
         } = req.body;
 
@@ -26,13 +26,13 @@ export const addUser = asyncHandler(async (req, res) => {
         // Insert the new user
         const newUser = await pool.query(
             `INSERT INTO users (
-                email, password_hash, role, phone_number, first_name, last_name, middle_name, mother, father, siblings,
+                email, password_hash, roles, phone_number, first_name, last_name, middle_name, mother, father, siblings,
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
             ) RETURNING *`,
             [
-                email,hashedPassword,role,phone_number,first_name,last_name,middle_name,mother,father,siblings,
+                email,hashedPassword,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
                 birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
             ]
         );
@@ -51,7 +51,7 @@ export const addUser = asyncHandler(async (req, res) => {
 export const getUsers = asyncHandler(async (req, res) => {
     try {
         const
-            result = await pool.query("SELECT * FROM users ORDER BY user_id ASC ")
+            result = await pool.query("SELECT * FROM users ORDER BY id ASC ")
         res.json(result.rows)
     } catch (error) {
         console.error("Error creating user:", error);
@@ -100,7 +100,7 @@ export const getUserById = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
         const
-            result = await pool.query("SELECT * FROM users WHERE user_id = $1", [id])
+            result = await pool.query("SELECT * FROM users WHERE id = $1", [id])
         if (result.rows.length === 0) {
             res.status(400).json({ message: "User not found" });
             return
@@ -119,12 +119,12 @@ export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            email,password,role,phone_number,first_name,last_name,middle_name,mother,father,siblings,
+            email,password,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
             birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
         } = req.body;
 
         // Check if user exists
-        const userCheck = await pool.query("SELECT * FROM users WHERE user_id = $1", [id]);
+        const userCheck = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
         if (userCheck.rows.length === 0) {
             res.status(400).json({ message: "User not found" });
             return;
@@ -145,9 +145,9 @@ export const updateUser = asyncHandler(async (req, res) => {
             fieldsToUpdate.push(`password_hash=$${index++}`);
             values.push(hashedPassword);
         }
-        if (role) {
-            fieldsToUpdate.push(`role=$${index++}`);
-            values.push(role);
+        if (roles) {
+            fieldsToUpdate.push(`roles=$${index++}`);
+            values.push(roles);
         }
         if (phone_number) {
             fieldsToUpdate.push(`phone_number=$${index++}`);
@@ -215,7 +215,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 
         // Update the user
         const updatedUser = await pool.query(
-            `UPDATE users SET ${fieldsToUpdate.join(", ")} WHERE user_id = $${index} RETURNING *`,
+            `UPDATE users SET ${fieldsToUpdate.join(", ")} WHERE id = $${index} RETURNING *`,
             values
         );
 
@@ -234,7 +234,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
         const
-            result = await pool.query("DELETE FROM users WHERE user_id = $1 RETURNING *", [id])
+            result = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [id])
         if (result.rows.length === 0) {
             res.status(400).json({ message: "User not found" });
             return

@@ -44,20 +44,20 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
             entry_no,
             county,
             subcounty,
-            first_name_groom,
-            last_name_groom,
+            firstname_groom,
+            lastname_groom,
             occupation_groom,
             residence_groom,
             age_groom,
-            first_name_bride,
-            last_name_bride,
+            firstname_bride,
+            lastname_bride,
             occupation_bride,
             residence_bride,
             age_bride,
-            first_name_witness1,
-            last_name_witness1,
-            first_name_witness2,
-            last_name_witness2,
+            firstname_witness1,
+            lastname_witness1,
+            firstname_witness2,
+            lastname_witness2,
             registrar,
             ref_number
         } = req.body;
@@ -75,20 +75,20 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
                 entry_no,
                 county,
                 subcounty,
-                first_name_groom,
-                last_name_groom,
+                firstname_groom,
+                lastname_groom,
                 occupation_groom,
                 residence_groom,
                 age_groom,
-                first_name_bride,
-                last_name_bride,
+                firstname_bride,
+                lastname_bride,
                 occupation_bride,
                 residence_bride,
                 age_bride,
-                first_name_witness1,
-                last_name_witness1,
-                first_name_witness2,
-                last_name_witness2,
+                firstname_witness1,
+                lastname_witness1,
+                firstname_witness2,
+                lastname_witness2,
                 registrar,
                 ref_number,
                 file_url
@@ -105,20 +105,20 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
                 entry_no,
                 county,
                 subcounty,
-                first_name_groom,
-                last_name_groom,
+                firstname_groom,
+                lastname_groom,
                 occupation_groom,
                 residence_groom,
                 age_groom,
-                first_name_bride,
-                last_name_bride,
+                firstname_bride,
+                lastname_bride,
                 occupation_bride,
                 residence_bride,
                 age_bride,
-                first_name_witness1,
-                last_name_witness1,
-                first_name_witness2,
-                last_name_witness2,
+                firstname_witness1,
+                lastname_witness1,
+                firstname_witness2,
+                lastname_witness2,
                 registrar,
                 ref_number,
                 file_url
@@ -148,20 +148,20 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             entry_no,
             county,
             subcounty,
-            first_name_groom,
-            last_name_groom,
+            firstname_groom,
+            lastname_groom,
             occupation_groom,
             residence_groom,
             age_groom,
-            first_name_bride,
-            last_name_bride,
+            firstname_bride,
+            lastname_bride,
             occupation_bride,
             residence_bride,
             age_bride,
-            first_name_witness1,
-            last_name_witness1,
-            first_name_witness2,
-            last_name_witness2,
+            firstname_witness1,
+            lastname_witness1,
+            firstname_witness2,
+            lastname_witness2,
             registrar,
             ref_number
         } = req.body;
@@ -202,13 +202,13 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`subcounty = $${index++}`);
             values.push(subcounty);
         }
-        if (first_name_groom) {
-            fieldsToUpdate.push(`first_name_groom = $${index++}`);
-            values.push(first_name_groom);
+        if (firstname_groom) {
+            fieldsToUpdate.push(`firstname_groom = $${index++}`);
+            values.push(firstname_groom);
         }
-        if (last_name_groom) {
-            fieldsToUpdate.push(`last_name_groom = $${index++}`);
-            values.push(last_name_groom);
+        if (lastname_groom) {
+            fieldsToUpdate.push(`lastname_groom = $${index++}`);
+            values.push(lastname_groom);
         }
         if (occupation_groom) {
             fieldsToUpdate.push(`occupation_groom = $${index++}`);
@@ -222,13 +222,13 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`age_groom = $${index++}`);
             values.push(age_groom);
         }
-        if (first_name_bride) {
-            fieldsToUpdate.push(`first_name_bride = $${index++}`);
-            values.push(first_name_bride);
+        if (firstname_bride) {
+            fieldsToUpdate.push(`firstname_bride = $${index++}`);
+            values.push(firstname_bride);
         }
-        if (last_name_bride) {
-            fieldsToUpdate.push(`last_name_bride = $${index++}`);
-            values.push(last_name_bride);
+        if (lastname_bride) {
+            fieldsToUpdate.push(`lastname_bride = $${index++}`);
+            values.push(lastname_bride);
         }
         if (occupation_bride) {
             fieldsToUpdate.push(`occupation_bride = $${index++}`);
@@ -242,21 +242,21 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`age_bride = $${index++}`);
             values.push(age_bride);
         }
-        if (first_name_witness1) {
-            fieldsToUpdate.push(`first_name_witness1 = $${index++}`);
-            values.push(first_name_witness1);
+        if (firstname_witness1) {
+            fieldsToUpdate.push(`firstname_witness1 = $${index++}`);
+            values.push(firstname_witness1);
         }
-        if (last_name_witness1) {
-            fieldsToUpdate.push(`last_name_witness1 = $${index++}`);
-            values.push(last_name_witness1);
+        if (lastname_witness1) {
+            fieldsToUpdate.push(`lastname_witness1 = $${index++}`);
+            values.push(lastname_witness1);
         }
-        if (first_name_witness2) {
-            fieldsToUpdate.push(`first_name_witness2 = $${index++}`);
-            values.push(first_name_witness2);
+        if (firstname_witness2) {
+            fieldsToUpdate.push(`firstname_witness2 = $${index++}`);
+            values.push(firstname_witness2);
         }
-        if (last_name_witness2) {
-            fieldsToUpdate.push(`last_name_witness2 = $${index++}`);
-            values.push(last_name_witness2);
+        if (lastname_witness2) {
+            fieldsToUpdate.push(`lastname_witness2 = $${index++}`);
+            values.push(lastname_witness2);
         }
         if (registrar) {
             fieldsToUpdate.push(`registrar = $${index++}`);

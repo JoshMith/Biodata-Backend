@@ -8,10 +8,10 @@ import asyncHandler from "../middlewares/asyncHandler"
 export const createParish = asyncHandler(async (req: Request, res: Response) => {
     const { parish_name } = req.body
     if (!parish_name ) {
-        return res.status(400).json({ message: "parish_name and deanery are required" })
+        return res.status(400).json({ message: "parish_name are required" })
     }
     const result = await pool.query(
-        "INSERT INTO parish (parish_name, deanery) VALUES ($1, $2) RETURNING *",
+        "INSERT INTO parishes (parish_name, deanery) VALUES ($1, $2) RETURNING *",
         [parish_name]
     )
     res.status(201).json(result.rows[0])
@@ -21,7 +21,7 @@ export const createParish = asyncHandler(async (req: Request, res: Response) => 
 
 // Get all parishes
 export const getAllParishes = asyncHandler(async (req: Request, res: Response) => {
-    const result = await pool.query("SELECT * FROM parish")
+    const result = await pool.query("SELECT * FROM parishes")
     res.json(result.rows)
 })
 
@@ -29,7 +29,7 @@ export const getAllParishes = asyncHandler(async (req: Request, res: Response) =
 export const getParishById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
     const result = await pool.query(
-        "SELECT * FROM parish WHERE parish_id = $1",
+        "SELECT * FROM parishes WHERE parish_id = $1",
         [id]
     )
     if (result.rows.length === 0) {
@@ -43,7 +43,7 @@ export const getParishById = asyncHandler(async (req: Request, res: Response) =>
 export const getParishByName = asyncHandler(async (req: Request, res: Response) => {
     const { name } = req.params
     const result = await pool.query(
-        "SELECT * FROM parish WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
+        "SELECT * FROM parishes WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
         [name]
     )
     if (result.rows.length === 0) {
@@ -69,7 +69,7 @@ export const updateParish = asyncHandler(async (req: Request, res: Response) => 
     }
     values.push(id)
     const result = await pool.query(
-        `UPDATE parish SET ${fields.join(", ")} WHERE parish_id = $${idx} RETURNING *`,
+        `UPDATE parishes SET ${fields.join(", ")} WHERE parish_id = $${idx} RETURNING *`,
         values
     )
     if (result.rows.length === 0) {
@@ -82,7 +82,7 @@ export const updateParish = asyncHandler(async (req: Request, res: Response) => 
 export const deleteParish = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
     const result = await pool.query(
-        "DELETE FROM parish WHERE parish_id = $1 RETURNING *",
+        "DELETE FROM parishes WHERE parish_id = $1 RETURNING *",
         [id]
     )
     if (result.rows.length === 0) {

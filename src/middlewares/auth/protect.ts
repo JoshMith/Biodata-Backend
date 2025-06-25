@@ -36,11 +36,11 @@ export const protect = asyncHandler(async (req: UserRequest, res: Response, next
         }
 
         //verify token 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: string; role: string };
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: string; roles: string };
 
         //get the user from database
         const userQuery = await pool.query(
-            "SELECT * FROM users WHERE users.user_id = $1",
+            "SELECT * FROM users WHERE users.id = $1",
             [decoded.userId]
         );
 

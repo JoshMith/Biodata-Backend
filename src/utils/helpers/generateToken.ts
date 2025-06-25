@@ -8,7 +8,7 @@ dotenv.config()
 // console.log("JWT_SECRET: ", process.env.JWT_SECRET )
 // console.log("REFRESH_TOKEN_SECRET: ", process.env.REFRESH_TOKEN_SECRET )
 
-export const generateToken = (res: Response, userId: string, role: string) => {
+export const generateToken = (res: Response, userId: string, roles: string) => {
     const jwtSecret = process.env.JWT_SECRET;
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
 
@@ -19,7 +19,7 @@ export const generateToken = (res: Response, userId: string, role: string) => {
     try {
         //Lets generate a short - lived acccess token for 60 minutes
         // sign(payload: string | Buffer | object, secretOrPrivateKey: null, options?: jwt.SignOptions & { algorithm: "none"; }): string
-        const accessToken = jwt.sign({ userId, role }, jwtSecret, { expiresIn: "60m" })
+        const accessToken = jwt.sign({ userId, roles }, jwtSecret, { expiresIn: "60m" })
         //Lets generate a long - lived acccess token for 30days
         const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: "30d" })
 

@@ -3,12 +3,15 @@ import pool from "../config/db.config";
 import bcrypt from 'bcryptjs'
 import { generateToken } from "../utils/helpers/generateToken";
 import asyncHandler from "../middlewares/asyncHandler";
+import jwt from 'jsonwebtoken'
+import { sendVerificationEmail } from "../utils/helpers/sendEmail";
+
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { first_name, last_name, middle_name, email, password, role, phone_number, parish_id } = req.body;
+    const { first_name, last_name, middle_name, email, password, roles, phone_number, parish_id } = req.body;
 
     // Check if user exists
-    const userExists = await pool.query("SELECT user_id FROM users WHERE email = $1", [email]);
+    const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
 
     if (userExists.rows.length > 0) {
         res.status(400).json({ message: "User already exists. Go to login..." });
@@ -22,10 +25,10 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     // Insert into users table
     const newUser = await pool.query(
         `INSERT INTO users
-            (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
+            (first_name, last_name, middle_name, email, password_hash, roles, phone_number, parish_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [first_name, last_name, middle_name, email, hashedPassword, role, phone_number, parish_id]
+        [first_name, last_name, middle_name, email, hashedPassword, roles, phone_number, parish_id]
     );
 
     const user = newUser.rows[0];
@@ -34,25 +37,30 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     let parishName: string | null = null;
     if (user.parish_id) {
         const parishResult = await pool.query(
-            `SELECT parish_name FROM parish WHERE parish_id = $1`,
+            `SELECT parish_name FROM parishes WHERE parish_id = $1`,
             [user.parish_id]
         );
         parishName = parishResult.rows[0]?.parish_name || null;
     }
 
-    // Log the user in immediately after registration
-    await generateToken(res, newUser.rows[0].user_id, newUser.rows[0].role);
+   
+   //generate verification token
+   const emailToken =jwt.sign({userId:user.id}, process.env.JWT_SECRET!,{expiresIn:"1h"});
+
+   //send verification email
+   await sendVerificationEmail(user.email,emailToken)
+
 
 
     res.status(201).json({
-        message: "User registered and logged in successfully",
+        message: "User registered successfully.Please Chck your email to verify your account",
         user: {
-            id: user.user_id,
+            id: user.id,
             firstName: user.first_name,
             lastName: user.last_name,
             middleName: user.middle_name,
             email: user.email,
-            role: user.role,
+            roles: user.roles,
             parishId: user.parish_id,
             parishName: parishName,
         }
@@ -65,7 +73,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
     // Check if user exists in the database
     const userQuery = await pool.query(
-        `SELECT users.user_id, users.first_name, users.last_name, users.middle_name, users.email, users.password_hash, users.role, users.parish_id
+        `SELECT users.id, users.first_name, users.last_name, users.middle_name, users.email, users.password_hash, users.roles, users.parish_id
         FROM users
         WHERE email = $1`,
         [email]
@@ -90,29 +98,60 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     let parishName: string | null = null;
     if (user.parish_id) {
         const parishResult = await pool.query(
-            `SELECT parish_name FROM parish WHERE parish_id = $1`,
+            `SELECT parish_name FROM parishes WHERE parish_id = $1`,
             [user.parish_id]
         );
         parishName = parishResult.rows[0]?.parish_name || null;
     }
 
     // Generate the JWT token (custom function for token generation)
-    await generateToken(res, user.user_id, user.role);
+    await generateToken(res, user.id, user.roles);
 
     // Respond with user data and success message
     res.status(200).json({
         message: "Login successful",
         user: {
-            id: user.user_id,
+            id: user.id,
             firstName: user.first_name,
             lastName: user.last_name,
             middleName: user.middle_name,
             email: user.email,
-            role: user.role,
+            roles: user.roles,
             parishId: user.parish_id,
             parishName: parishName,
         }
     });
+});
+
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+
+    console.log("verify email called")
+    const token = req.query.token as string;
+    console.log("recived token")
+    if (!token) {
+        return res.status(400).json({ message: "Invalid or missing token" });
+    }
+
+
+    try {
+        // Decode the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+
+        // Update user as verified
+        const result = await pool.query(
+            "UPDATE users SET verified = TRUE WHERE id = $1 RETURNING id, email, verified",
+            [decoded.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        return res.status(200).json({ message: "Email successfully verified", user: result.rows[0] });
+
+    } catch (error) {
+        return res.status(400).json({ message: "Invalid or expired token" });
+    }
 });
 
 
