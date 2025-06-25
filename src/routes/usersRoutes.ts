@@ -19,7 +19,7 @@ router.get("/", protect, getUsers);
 router.get("/count", protect, getUserCount);
 router.get("/name/:name", protect, getUserByName);
 router.get("/:id", protect, getUserById);
-router.put("/:id", protect, updateUser);
+router.patch("/:id", protect, updateUser);
 router.delete("/:id", protect, deleteUser);
 // router.delete("/:id",deleteUser);
 

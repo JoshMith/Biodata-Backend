@@ -6,10 +6,13 @@ import { Request } from "express";
  */
 export interface User {
     id: string;
-    name: string;
+    first_name: string;
+    last_name: string;
+    middle_name: string;
     email: string;
     password?: string;
-    role: string;
+    roles: string;
+    parish_id: string;
     father: string;
     mother: string;
     tribe: string;
