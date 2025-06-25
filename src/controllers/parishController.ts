@@ -21,7 +21,7 @@ export const createParish = asyncHandler(async (req: Request, res: Response) => 
 
 // Get all parishes
 export const getAllParishes = asyncHandler(async (req: Request, res: Response) => {
-    const result = await pool.query("SELECT * FROM parishes")
+    const result = await pool.query("SELECT * FROM parishes ")
     res.json(result.rows)
 })
 
@@ -51,7 +51,17 @@ export const getParishByName = asyncHandler(async (req: Request, res: Response) 
     }
     res.json(result.rows[0])
 })
-
+export const getParishByDeanery = asyncHandler(async (req: Request, res: Response) => {
+    const { deanery } = req.params
+    const result = await pool.query(
+        "SELECT * FROM parishes WHERE to_tsvector(deanery) @@ plainto_tsquery($1)",
+        [deanery]
+    )
+    if (result.rows.length === 0) {
+        return res.status(404).json({ message: "No parishes found for this deanery" })
+    }
+    res.json(result.rows)
+})
 
 // Update parish by PATCH
 export const updateParish = asyncHandler(async (req: Request, res: Response) => {
