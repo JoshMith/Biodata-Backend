@@ -12,7 +12,7 @@ export const sendVerificationEmail =async (to:string,token:string)=>{
             pass:process.env.EMAIL_PASS
         },
     });
-console.log("Frontend url is",process.env.FRONTEND_URL)
+
     const verificationLink=`${process.env.FRONTEND_URL}/verifyEmail?token=${encodeURIComponent(token)}`;
 
     const mailOptions={
