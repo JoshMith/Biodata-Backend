@@ -9,19 +9,17 @@ import {
     updateUser,
 } from "../controllers/usersController";
 import { protect } from "../middlewares/auth/protect";
-import { adminGuard } from "../middlewares/auth/roleMiddleWare";
+import { adminEditorGuard, allViewersGuard, superuserGuard } from "../middlewares/auth/roleMiddleWare";
 
 const router = express.Router();
 
 router.post("/", protect, addUser);
-// router.post("/", addUser);
-router.get("/", protect, getUsers);
-router.get("/count", protect, getUserCount);
-router.get("/name/:name", protect, getUserByName);
-router.get("/:id", protect, getUserById);
-router.patch("/:id", protect, updateUser);
-router.delete("/:id", protect, deleteUser);
-// router.delete("/:id",deleteUser);
+router.get("/", protect, allViewersGuard, getUsers);
+router.get("/count", protect, allViewersGuard, getUserCount);
+router.get("/name/:name", protect, allViewersGuard, getUserByName);
+router.get("/:id", protect, allViewersGuard, getUserById);
+router.put("/:id", protect, adminEditorGuard, updateUser);
+router.delete("/:id", protect, superuserGuard, deleteUser);
 
 
 export default router;

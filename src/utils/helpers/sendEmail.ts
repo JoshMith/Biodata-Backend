@@ -15,14 +15,20 @@ export const sendVerificationEmail =async (to:string,token:string)=>{
 
     const verificationLink=`${process.env.FRONTEND_URL}/verifyEmail?token=${encodeURIComponent(token)}`;
 
-    const mailOptions={
-        from:process.env.EMAIL_USER,
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
         to,
-        subject:'Verify your email Address',
-        html:`<p>Hi,</p>
-        <p>Click the link below to verify your email address:</p>
-        <a href="${verificationLink}">Verify Email</a>
-        <p>This link will expire in 1 hour.</p>`,
+        subject: 'Welcome to Christian Data Management System - Email Verification',
+        html: `
+            <p>Dear Christian,</p>
+            <p>An account was created with your email address for the <strong>Christian Data Management System:</strong><strong> Archdiocese of Nyeri</strong>!</p>
+            <p>To complete the registration and activate your account, please verify your email address by clicking the link below:</p>
+            <p><strong><a href="${verificationLink}">Verify Email</a></strong></p>
+            <p>This link will expire in 1 hour for your security.</p>
+            <p>If you did not create an account, please ignore this email.</p>
+            <br>
+            <p>Thank you,<br>The Archdiocese of Nyeri Team</p>
+        `,
     }
     try {
         await transporter.sendMail(mailOptions);

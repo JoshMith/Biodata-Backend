@@ -1,6 +1,5 @@
 import express from "express"
 import { protect } from "../middlewares/auth/protect"
-import {  adminGuard } from "../middlewares/auth/roleMiddleWare"
 import { createBaptism, deleteBaptism, getBaptism,  getBaptismById, getBaptismByUserId, updateBaptism } from "../controllers/baptismController"
 
 //instance of router

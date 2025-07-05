@@ -1,6 +1,5 @@
 import express from "express"
 import { protect } from "../middlewares/auth/protect"
-import {  adminGuard } from "../middlewares/auth/roleMiddleWare"
 import { createConfirmation, deleteConfirmation, getConfirmation,  getConfirmationById, getConfirmationByUserId, updateConfirmation } from "../controllers/confirmController"
 
 //instance of router

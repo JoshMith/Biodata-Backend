@@ -43,14 +43,15 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
         parishName = parishResult.rows[0]?.parish_name || null;
     }
 
-   
-   //generate verification token
-   const emailToken =jwt.sign({userId:user.id}, process.env.JWT_SECRET!,{expiresIn:"1h"});
 
-   //send verification email
-   await sendVerificationEmail(user.email,emailToken)
+    //generate verification token
+    const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
 
+    //send verification email
+    await sendVerificationEmail(user.email, emailToken)
 
+    // Generate the JWT token (custom function for token generation)
+    await generateToken(res, user.id, user.roles);
 
     res.status(201).json({
         message: "User registered successfully.Please Chck your email to verify your account",
@@ -61,6 +62,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             middleName: user.middle_name,
             email: user.email,
             roles: user.roles,
+            verified: user.verified,
             parishId: user.parish_id,
             parishName: parishName,
         }
@@ -70,6 +72,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
 
 export const loginUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+
 
     // Check if user exists in the database
     const userQuery = await pool.query(
@@ -86,6 +89,15 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
     // Retrieve the user data from the query result
     const user = userQuery.rows[0];
+
+    // Check if user is verified
+    const verifiedQuery = await pool.query(
+        `SELECT verified FROM users WHERE email = $1`,
+        [email]
+    );
+    if (verifiedQuery.rows.length === 0 || !verifiedQuery.rows[0].verified) {
+        return res.status(401).json({ message: "Please verify your email before logging in." });
+    }
 
     // Compare the entered password with the stored hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -117,6 +129,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
             middleName: user.middle_name,
             email: user.email,
             roles: user.roles,
+            verified: user.verified,
             parishId: user.parish_id,
             parishName: parishName,
         }
@@ -125,7 +138,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
 
-    console.log("verify email called")
+    // console.log("verify email called")
     const token = req.query.token as string;
     console.log("recived token")
     if (!token) {

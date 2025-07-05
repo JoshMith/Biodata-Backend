@@ -2,14 +2,17 @@ import { Request, Response } from "express"
 import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 import bcrypt from "bcrypt"
+import jwt from 'jsonwebtoken'
+import { sendVerificationEmail } from "../utils/helpers/sendEmail";
+import { generateToken } from "../utils/helpers/generateToken"
 
 
 // Add a new user
 export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
-            email,password,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
-            birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
+            email, password, roles, phone_number, first_name, last_name, middle_name, mother, father,
+            birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
         // Check if email already exists
@@ -26,16 +29,28 @@ export const addUser = asyncHandler(async (req, res) => {
         // Insert the new user
         const newUser = await pool.query(
             `INSERT INTO users (
-                email, password_hash, roles, phone_number, first_name, last_name, middle_name, mother, father, siblings,
+                email, password_hash, roles, phone_number, first_name, last_name, middle_name, mother, father, 
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
             ) RETURNING *`,
             [
-                email,hashedPassword,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
-                birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
+                email, hashedPassword, roles, phone_number, first_name, last_name, middle_name, mother, father,
+                birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ]
         );
+
+        const user = newUser.rows[0];
+
+        //generate verification token
+        const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+
+        //send verification email
+        await sendVerificationEmail(user.email, emailToken)
+
+        // Generate the JWT token (custom function for token generation)
+        await generateToken(res, user.id, user.roles);
+
 
         res.status(201).json({
             message: "User successfully added",
@@ -119,8 +134,8 @@ export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            email,password,roles,phone_number,first_name,last_name,middle_name,mother,father,siblings,
-            birth_place,subcounty,birth_date,tribe,clan,residence,parish_id
+            email, password, roles, phone_number, first_name, last_name, middle_name, mother, father,
+            birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
         // Check if user exists
@@ -172,10 +187,6 @@ export const updateUser = asyncHandler(async (req, res) => {
         if (father) {
             fieldsToUpdate.push(`father=$${index++}`);
             values.push(father);
-        }
-        if (siblings) {
-            fieldsToUpdate.push(`siblings=$${index++}`);
-            values.push(siblings);
         }
         if (birth_place) {
             fieldsToUpdate.push(`birth_place=$${index++}`);
@@ -241,7 +252,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
         }
         res.json({ message: "User deleted" })
     } catch (error) {
-        console.error("Error fetching users count:", error);
+        console.error("Error Deleting this user", error);
         res.status(500).json({ message: "Internal server error" });
     }
 })

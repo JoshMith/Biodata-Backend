@@ -1,6 +1,5 @@
 import express from 'express'
 import { loginUser, logoutUser, registerUser, verifyEmail } from '../controllers/authController'
-import {  adminGuard } from '../middlewares/auth/roleMiddleWare'
 
 const router = express.Router()
 

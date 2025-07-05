@@ -12,13 +12,14 @@ import cookieParser from "cookie-parser"
 import cors from "cors"
 import { notFound } from "./middlewares/errorMiddlewares"
 import authRoutes from "./routes/authRoutes"
-import { getUsers } from "./controllers/usersController"
 import usersRoutes from "./routes/usersRoutes"
 import baptismRoutes from "./routes/baptismRoutes"
 import eucharistRoutes from "./routes/eucharistRoutes"
 import confirmRoutes from "./routes/confirmRoutes"
-import marriageRoutes from "./routes/marriageRoutes"
 import parishRoutes from "./routes/parishRoutes"
+import marriageDocumentRoutes from "./routes/marriageDocumentRoutes"
+import marriagePartiesRoutes from "./routes/marriagePartiesRoutes"
+import marriages2Routes from "./routes/marriages2Routes"
 
 //1:configure the dotenv
 dotenv.config()
@@ -38,7 +39,8 @@ const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200', 'https
 
 //CORS middleware
 app.use(cors({
-    origin: allowedOrigins,
+    // origin: allowedOrigins,
+    origin: true,
     methods: "GET, POST, PUT, PATCH, DELETE",
     credentials: true // allows cookies and auth headers
 }))
@@ -51,7 +53,9 @@ app.use("/auth", authRoutes)
 app.use("/baptism", baptismRoutes)
 app.use("/eucharist", eucharistRoutes)
 app.use("/confirmation", confirmRoutes)
-app.use("/marriage", marriageRoutes)
+app.use("/marriages", marriages2Routes)
+app.use("/marriage-documents", marriageDocumentRoutes)
+app.use("/marriage-parties", marriagePartiesRoutes)
 app.use("/parish", parishRoutes)
 
 

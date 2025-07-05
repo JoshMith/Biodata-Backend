@@ -1,6 +1,5 @@
 import express from "express"
 import { protect } from "../middlewares/auth/protect"
-import {  adminGuard } from "../middlewares/auth/roleMiddleWare"
 import { createEucharist, deleteEucharist, getEucharist,  getEucharistById,  getEucharistByUserId,  updateEucharist } from "../controllers/eucharistController"
 
 //instance of router
