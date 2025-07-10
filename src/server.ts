@@ -20,6 +20,8 @@ import parishRoutes from "./routes/parishRoutes"
 import marriageDocumentRoutes from "./routes/marriageDocumentRoutes"
 import marriagePartiesRoutes from "./routes/marriagePartiesRoutes"
 import marriages2Routes from "./routes/marriages2Routes"
+import path from "path"
+
 
 //1:configure the dotenv
 dotenv.config()
@@ -57,6 +59,27 @@ app.use("/marriages", marriages2Routes)
 app.use("/marriage-documents", marriageDocumentRoutes)
 app.use("/marriage-parties", marriagePartiesRoutes)
 app.use("/parish", parishRoutes)
+app.use('/marriage-documents/download', express.static(
+    path.join(__dirname, 'uploads', 'marriage_documents'), 
+    {
+        setHeaders: (res, filePath) => {
+            const filename = path.basename(filePath);
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            
+            const ext = path.extname(filename).toLowerCase();
+            const contentType = {
+                '.pdf': 'application/pdf',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.doc': 'application/msword',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            }[ext] || 'application/octet-stream';
+            
+            res.setHeader('Content-Type', contentType);
+        }
+    }
+));
 
 
 app.get('', (req, res) => {

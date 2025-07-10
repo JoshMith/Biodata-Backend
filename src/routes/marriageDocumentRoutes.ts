@@ -2,7 +2,7 @@ import express from 'express';
 import { protect } from '../middlewares/auth/protect';
 
 // Import the new controller and multer upload
-import { createMarriageDocument, getMarriageDocuments, getMarriageDocumentById, updateMarriageDocument, deleteMarriageDocument, upload, getDocumentUrl } from '../controllers/marriageDocumentController';
+import { createMarriageDocument, getMarriageDocuments, getMarriageDocumentById, updateMarriageDocument, deleteMarriageDocument, upload, downloadMarriageDocument, getMarriageDocumentList } from '../controllers/marriageDocumentController';
 
 const router = express.Router();
 
@@ -12,6 +12,10 @@ router.get('/', protect, getMarriageDocuments);
 router.get('/:id', protect, getMarriageDocumentById);
 router.put('/:id', protect, updateMarriageDocument);
 router.delete('/:id', protect, deleteMarriageDocument);
-// router.get('/url/:filePath', protect, getDocumentUrl);
+
+// New routes for document download
+router.get('/download/:filename', protect, downloadMarriageDocument);
+router.get('/list/:marriageId', protect, getMarriageDocumentList);
+
 
 export default router;

@@ -49,7 +49,7 @@ export const addUser = asyncHandler(async (req, res) => {
         await sendVerificationEmail(user.email, emailToken)
 
         // Generate the JWT token (custom function for token generation)
-        await generateToken(res, user.id, user.roles);
+        // await generateToken(res, user.id, user.roles);
 
 
         res.status(201).json({
