@@ -21,5 +21,5 @@ export const viewerGuard = roleGuard(["viewer"]);
 export const editorGuard = roleGuard(["editor"]);
 export const memberGuard = roleGuard(["member"]);
 export const allViewersGuard = roleGuard(["superuser", "viewer", "editor"]);
-export const adminEditorGuard = roleGuard(["superuser", "editor"]);
+export const superUserEditorGuard = roleGuard(["superuser", "editor"]);
 export const allGuard = roleGuard(["superuser", "viewer", "editor", "member"]);

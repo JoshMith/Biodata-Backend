@@ -25,7 +25,7 @@ export const protect = asyncHandler(async (req: UserRequest, res: Response, next
 
     //if no token found
     if (!token) {
-        res.status(401).json({ message: "Not authorized , no token" });
+        res.status(401).json({ message: "Not Authorized: No Token. Go to Login" });
         return
     }
 
