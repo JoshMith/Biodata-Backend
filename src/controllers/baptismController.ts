@@ -6,7 +6,7 @@ import asyncHandler from "../middlewares/asyncHandler"
 // Create baptism
 export const createBaptism = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const { user_id, parish, baptism_date, minister, sponsor } = req.body;
+        const { user_id, parish, baptism_date, baptism_number, minister, sponsor } = req.body;
 
         // Optionally, check if a baptism record already exists for this user
         const baptismCheck = await pool.query(
@@ -21,9 +21,9 @@ export const createBaptism = asyncHandler(async (req: Request, res: Response) =>
 
         // Proceed to create baptism
         const baptismResult = await pool.query(
-            `INSERT INTO baptism(user_id, parish, baptism_date, minister, sponsor) 
-             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [user_id, parish, baptism_date, minister, sponsor]
+            `INSERT INTO baptism(user_id, parish, baptism_date, baptism_number, minister, sponsor) 
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [user_id, parish, baptism_date, baptism_number, minister, sponsor]
         );
 
         res.status(201).json({
@@ -92,7 +92,7 @@ export const getBaptismByUserId = asyncHandler(async (req: Request, res: Respons
 export const updateBaptism = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { parish, baptism_date, minister, sponsor, user_id } = req.body;
+        const { parish, baptism_date, baptism_number, minister, sponsor, user_id } = req.body;
 
         const fieldsToUpdate = [];
         const values = [];
@@ -105,6 +105,10 @@ export const updateBaptism = asyncHandler(async (req: Request, res: Response) =>
         if (baptism_date) {
             fieldsToUpdate.push(`baptism_date = $${index++}`);
             values.push(baptism_date);
+        }
+        if (baptism_number) {
+            fieldsToUpdate.push(`baptism_number = $${index++}`);
+            values.push(baptism_number);
         }
         if (minister) {
             fieldsToUpdate.push(`minister = $${index++}`);

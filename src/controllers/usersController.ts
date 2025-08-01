@@ -11,7 +11,7 @@ import { generateToken } from "../utils/helpers/generateToken"
 export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
-            email, password, roles, phone_number, first_name, last_name, middle_name, mother, father,
+            email, password, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
             birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
@@ -29,13 +29,13 @@ export const addUser = asyncHandler(async (req, res) => {
         // Insert the new user
         const newUser = await pool.query(
             `INSERT INTO users (
-                email, password_hash, roles, phone_number, first_name, last_name, middle_name, mother, father, 
+                email, password_hash, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father, 
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
             ) RETURNING *`,
             [
-                email, hashedPassword, roles, phone_number, first_name, last_name, middle_name, mother, father,
+                email, hashedPassword, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ]
         );
@@ -134,7 +134,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            email, password, roles, phone_number, first_name, last_name, middle_name, mother, father,
+            email, password, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
             birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
@@ -167,6 +167,10 @@ export const updateUser = asyncHandler(async (req, res) => {
         if (phone_number) {
             fieldsToUpdate.push(`phone_number=$${index++}`);
             values.push(phone_number);
+        }
+        if (registration_number) {
+            fieldsToUpdate.push(`registration_number=$${index++}`);
+            values.push(registration_number);
         }
         if (first_name) {
             fieldsToUpdate.push(`first_name=$${index++}`);
