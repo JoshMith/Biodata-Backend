@@ -8,7 +8,7 @@ import { sendVerificationEmail } from "../utils/helpers/sendEmail";
 
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { first_name, last_name, middle_name, email, password, roles, phone_number, parish_id } = req.body;
+    const { first_name, last_name, middle_name, email, password, phone_number, parish_id } = req.body;
 
     // Check if user exists
     const userExists = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -25,10 +25,10 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     // Insert into users table
     const newUser = await pool.query(
         `INSERT INTO users
-            (first_name, last_name, middle_name, email, password_hash, roles, phone_number, parish_id)
+            (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [first_name, last_name, middle_name, email, hashedPassword, roles, phone_number, parish_id]
+        [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
     );
 
     const user = newUser.rows[0];
@@ -51,7 +51,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     await sendVerificationEmail(user.email, emailToken)
 
     // Generate the JWT token (custom function for token generation)
-    await generateToken(res, user.id, user.roles);
+    await generateToken(res, user.id, user.role);
 
     res.status(201).json({
         message: "User registered successfully.Please Chck your email to verify your account",
@@ -61,7 +61,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             lastName: user.last_name,
             middleName: user.middle_name,
             email: user.email,
-            roles: user.roles,
+            role: user.role,
             verified: user.verified,
             parishId: user.parish_id,
             parishName: parishName,
@@ -76,7 +76,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
     // Check if user exists in the database
     const userQuery = await pool.query(
-        `SELECT users.id, users.first_name, users.last_name, users.middle_name, users.email, users.password_hash, users.roles, users.parish_id
+        `SELECT users.id, users.first_name, users.last_name, users.middle_name, users.email, users.password_hash, users.role, users.parish_id
         FROM users
         WHERE email = $1`,
         [email]
@@ -117,7 +117,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     }
 
     // Generate the JWT token (custom function for token generation)
-    await generateToken(res, user.id, user.roles);
+    await generateToken(res, user.id, user.role);
 
     // Respond with user data and success message
     res.status(200).json({
@@ -128,7 +128,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
             lastName: user.last_name,
             middleName: user.middle_name,
             email: user.email,
-            roles: user.roles,
+            role: user.role,
             verified: user.verified,
             parishId: user.parish_id,
             parishName: parishName,

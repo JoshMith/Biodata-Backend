@@ -11,7 +11,7 @@ export interface User {
     middle_name: string;
     email: string;
     password?: string;
-    roles: string;
+    role: string;
     parish_id: string;
     father: string;
     mother: string;
