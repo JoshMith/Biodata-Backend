@@ -6,7 +6,7 @@ import { UserRequest } from "../../utils/types/userTypes";
 //ensure user has required roles
 export const roleGuard = (allowedRoles: string[], ...args: string[]) =>
     asyncHandler<void, UserRequest>(async (req:UserRequest, res:Response, next:NextFunction) => {
-        if (!req.user || !allowedRoles.includes(req.user.roles)) {
+        if (!req.user || !allowedRoles.includes(req.user.role)) {
             res.status(403).json({ message: "Access denied: Insufficient permissions" });
             return;
         }
@@ -22,4 +22,5 @@ export const editorGuard = roleGuard(["editor"]);
 export const memberGuard = roleGuard(["member"]);
 export const allViewersGuard = roleGuard(["superuser", "viewer", "editor"]);
 export const superUserEditorGuard = roleGuard(["superuser", "editor"]);
+export const ownUserSuperUserEditorGuard = roleGuard(["superuser", "editor", "member"])
 export const allGuard = roleGuard(["superuser", "viewer", "editor", "member"]);

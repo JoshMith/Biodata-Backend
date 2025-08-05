@@ -19,7 +19,7 @@ import confirmRoutes from "./routes/confirmRoutes"
 import parishRoutes from "./routes/parishRoutes"
 import marriageDocumentRoutes from "./routes/marriageDocumentRoutes"
 import marriagePartiesRoutes from "./routes/marriagePartiesRoutes"
-import marriages2Routes from "./routes/marriages2Routes"
+import marriageRoutes from "./routes/marriageRoutes"
 import path from "path"
 
 
@@ -55,7 +55,7 @@ app.use("/auth", authRoutes)
 app.use("/baptism", baptismRoutes)
 app.use("/eucharist", eucharistRoutes)
 app.use("/confirmation", confirmRoutes)
-app.use("/marriages", marriages2Routes)
+app.use("/marriages", marriageRoutes)
 app.use("/marriage-documents", marriageDocumentRoutes)
 app.use("/marriage-parties", marriagePartiesRoutes)
 app.use("/parish", parishRoutes)

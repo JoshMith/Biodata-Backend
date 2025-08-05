@@ -11,7 +11,7 @@ import { generateToken } from "../utils/helpers/generateToken"
 export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
-            email, password, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+            email, password, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
             birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
@@ -29,13 +29,13 @@ export const addUser = asyncHandler(async (req, res) => {
         // Insert the new user
         const newUser = await pool.query(
             `INSERT INTO users (
-                email, password_hash, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father, 
+                email, password_hash, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father, 
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
             ) RETURNING *`,
             [
-                email, hashedPassword, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+                email, hashedPassword, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ]
         );
@@ -49,7 +49,7 @@ export const addUser = asyncHandler(async (req, res) => {
         await sendVerificationEmail(user.email, emailToken)
 
         // Generate the JWT token (custom function for token generation)
-        // await generateToken(res, user.id, user.roles);
+        // await generateToken(res, user.id, user.role);
 
 
         res.status(201).json({
@@ -134,7 +134,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            email, password, roles, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+            email, password, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
             birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
@@ -160,9 +160,9 @@ export const updateUser = asyncHandler(async (req, res) => {
             fieldsToUpdate.push(`password_hash=$${index++}`);
             values.push(hashedPassword);
         }
-        if (roles) {
-            fieldsToUpdate.push(`roles=$${index++}`);
-            values.push(roles);
+        if (role) {
+            fieldsToUpdate.push(`role=$${index++}`);
+            values.push(role);
         }
         if (phone_number) {
             fieldsToUpdate.push(`phone_number=$${index++}`);
