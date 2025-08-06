@@ -35,7 +35,7 @@ export const addUser = asyncHandler(async (req, res) => {
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
             ) RETURNING *`,
             [
-                email, hashedPassword, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+                email, hashedPassword, "member", phone_number, registration_number, first_name, last_name, middle_name, mother, father,
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ]
         );
