@@ -36,11 +36,17 @@ export const protect = asyncHandler(async (req: UserRequest, res: Response, next
         }
 
         //verify token 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: string; role: string };
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
+
+        // console.log("Decoded JWT:", decoded);
+        if (!decoded || !decoded.userId) {
+            res.status(401).json({ message: "Not authorized, token invalid" });
+            return;
+        }
 
         //get the user from database
         const userQuery = await pool.query(
-            "SELECT * FROM users WHERE users.id = $1",
+            "SELECT * FROM users WHERE id = $1",
             [decoded.userId]
         );
 

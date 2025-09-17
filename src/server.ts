@@ -1,11 +1,3 @@
-// dotenv
-//express instance
-//load variables
-//enable all important middleware
-//create all routes
-//load more middleware - eg error handlers
-//start the server
-
 import express from "express"
 import dotenv from 'dotenv'
 import cookieParser from "cookie-parser"
@@ -156,7 +148,6 @@ app.use(notFound)
 
 
 // start the server
-
 const port = process.env.PORT || 5000
 app.listen(port, () => {
     console.log(`🚀🚀Server is running on port: ${port}`)
