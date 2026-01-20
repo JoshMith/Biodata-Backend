@@ -1,26 +1,28 @@
-import { Pool } from 'pg'
-import dotenv from 'dotenv'
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-dotenv.config()
+dotenv.config();
 
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-
-    // For local development, comment out the ssl option
-    // ssl: {
-    //     rejectUnauthorized: false, // Required for Render
-    // },
-})
-pool.query('SELECT NOW()', (err, result) => {
-  if (err) {
-    console.error('Error connecting to database:', err);
-  } else {
-    console.log('Database connected:', result.rows);
-  }
+// Create connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,           // Should be 'db.cbms.adnyeri.org'
+  port: Number(process.env.DB_PORT) || 3306, // MySQL default port is 3306
+  user: process.env.DB_USER,           // Should be 'cdbms_user'
+  password: process.env.DB_PASSWORD,   // Your actual MySQL password
+  database: process.env.DB_NAME,       // Should be 'christian_bio_data'
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-export default pool
+// Test connection
+pool.getConnection()
+  .then((connection) => {
+    console.log('✅ MySQL Database connected successfully');
+    connection.release();
+  })
+  .catch((err) => {
+    console.error('❌ MySQL Database connection failed:', err.message);
+  });
+
+export default pool;
