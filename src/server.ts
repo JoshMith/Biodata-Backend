@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 app.use(cookieParser())
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:4200', 'https://christian-biodata-git-main-joshmiths-projects.vercel.app'];
+const allowedOrigins = ['https://cbms.adnyeri.org', 'http://localhost:4200'];
 
 //CORS middleware
 app.use(cors({
@@ -133,7 +133,7 @@ app.get('', (req, res) => {
                 <p>Your backend server is up and running!</p>
                 <span class="badge">Status: Online</span>
                 <p style="margin-top:2rem;">
-                    <a href="https://christian-biodata-git-main-joshmiths-projects.vercel.app" target="_blank">View Site</a>
+                    <a href="https://cbms.adnyeri.org" target="_blank">View Site</a>
                 </p>
             </div>
         </body>
