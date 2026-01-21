@@ -26,7 +26,7 @@ export const generateToken = (res: Response, userId: string, role: string) => {
         //set Access token as HTTP-Only secure cookie 
         res.cookie("access_token", accessToken, {
             httpOnly: true,
-            secure: true, // Secure in production
+            secure: false, // Secure in production
             sameSite: "none",
             maxAge: 60 * 60 * 1000, // 60 minutes
         });
@@ -35,7 +35,7 @@ export const generateToken = (res: Response, userId: string, role: string) => {
         // Set Refresh Token as HTTP-Only Secure Cookie
         res.cookie("refresh_token", refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "none",
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         });
