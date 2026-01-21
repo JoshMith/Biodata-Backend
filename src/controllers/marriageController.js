@@ -1,10 +1,30 @@
-import { Request, Response } from 'express';
-import asyncHandler from '../middlewares/asyncHandler';
-import pool from '../config/db.config';
-
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.deleteMarriage = exports.updateMarriage = exports.getMarriageById = exports.getFullMarriageByUserId = exports.getUserMarriages = exports.getAllMarriages = exports.createMarriage = void 0;
+const asyncHandler_1 = __importDefault(require("../middlewares/asyncHandler"));
+const db_config_1 = __importDefault(require("../config/db.config"));
 // CREATE a new marriage record
-export const createMarriage = asyncHandler(async (req: Request, res: Response) => {
-    const {
+exports.createMarriage = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { user_id, certificate_number, submission_location, submission_sub_county, submission_county, marriage_date, marriage_entry_number, registrar_certification_number, special_license_number, conducted_by, private_parties_count, private_parties_names, } = req.body;
+    const result = yield db_config_1.default.query(`INSERT INTO marriages (
+            user_id, certificate_number, submission_location, submission_sub_county, submission_county,
+            marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
+            conducted_by, private_parties_count, private_parties_names
+        ) VALUES (
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+        ) RETURNING *`, [
         user_id,
         certificate_number,
         submission_location,
@@ -17,54 +37,26 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
         conducted_by,
         private_parties_count,
         private_parties_names,
-    } = req.body;
-
-    const result = await pool.query(
-        `INSERT INTO marriages (
-            user_id, certificate_number, submission_location, submission_sub_county, submission_county,
-            marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
-            conducted_by, private_parties_count, private_parties_names
-        ) VALUES (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
-        ) RETURNING *`,
-        [
-            user_id,
-            certificate_number,
-            submission_location,
-            submission_sub_county,
-            submission_county,
-            marriage_date,
-            marriage_entry_number,
-            registrar_certification_number,
-            special_license_number,
-            conducted_by,
-            private_parties_count,
-            private_parties_names,
-        ]
-    );
-    res.status(201).json(result as any[]);
-});
-
+    ]);
+    res.status(201).json(result);
+}));
 // READ all marriage records
-export const getAllMarriages = asyncHandler(async (_req: Request, res: Response) => {
-    const result = await pool.query('SELECT * FROM marriages');
-    res.json(result as any[]);
-});
-
+exports.getAllMarriages = (0, asyncHandler_1.default)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield db_config_1.default.query('SELECT * FROM marriages');
+    res.json(result);
+}));
 // READ all marriage records for a specific user
-export const getUserMarriages = asyncHandler(async (req: Request, res: Response) => {
+exports.getUserMarriages = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user_id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE user_id = $1', [user_id]);
-    if ((result as any[]).length === 0) {
+    const result = yield db_config_1.default.query('SELECT * FROM marriages WHERE user_id = $1', [user_id]);
+    if (result.length === 0) {
         return res.status(404).json({ error: 'No marriage records found for this user' });
     }
-    res.json(result as any[]);
-});
-
+    res.json(result);
+}));
 // Add this new function to your marriages2Controller.ts
-export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
+exports.getFullMarriageByUserId = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user_id } = req.params;
-    
     const query = `
         SELECT 
             m.*,
@@ -104,50 +96,31 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
         GROUP BY m.marriage_id
         ORDER BY m.marriage_date DESC
     `;
-
-    const result = await pool.query(query, [user_id]);
-    
-    if ((result as any[]).length === 0) {
-        return res.status(404).json({ 
-            error: 'No marriage records found for this user' 
+    const result = yield db_config_1.default.query(query, [user_id]);
+    if (result.length === 0) {
+        return res.status(404).json({
+            error: 'No marriage records found for this user'
         });
     }
-    
-    res.json(result as any[]);
-});
-
+    res.json(result);
+}));
 // READ a single marriage record by ID
-export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
+exports.getMarriageById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE marriage_id = $1', [id]);
-    if ((result as any[]).length === 0) {
+    const result = yield db_config_1.default.query('SELECT * FROM marriages WHERE marriage_id = $1', [id]);
+    if (result.length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
-    res.json((result as any[])[0]);
-});
-
+    res.json(result[0]);
+}));
 // UPDATE a marriage record with file upload support
-export const updateMarriage = asyncHandler(async (req: Request, res: Response) => {
+exports.updateMarriage = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const {
-            certificate_number,
-            submission_location,
-            submission_sub_county,
-            submission_county,
-            marriage_date,
-            marriage_entry_number,
-            registrar_certification_number,
-            special_license_number,
-            conducted_by,
-            private_parties_count,
-            private_parties_names,
-        } = req.body;
-
-        const fieldsToUpdate: string[] = [];
-        const values: any[] = [];
+        const { certificate_number, submission_location, submission_sub_county, submission_county, marriage_date, marriage_entry_number, registrar_certification_number, special_license_number, conducted_by, private_parties_count, private_parties_names, } = req.body;
+        const fieldsToUpdate = [];
+        const values = [];
         let index = 1;
-
         if (certificate_number) {
             fieldsToUpdate.push(`certificate_number = $${index++}`);
             values.push(certificate_number);
@@ -192,41 +165,34 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`private_parties_names = $${index++}`);
             values.push(private_parties_names);
         }
-
         if (fieldsToUpdate.length === 0) {
             res.status(400).json({ message: "No fields provided for update" });
             return;
         }
-
         // Always update updated_at
         fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
-
         values.push(id);
         const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index} RETURNING *`;
-
-        const result = await pool.query(query, values);
-
-        if ((result as any[]).length === 0) {
+        const result = yield db_config_1.default.query(query, values);
+        if (result.length === 0) {
             return res.status(404).json({ error: 'Marriage record not found' });
         }
-
         res.json({
             message: "Marriage record updated successfully",
-            marriage: (result as any[])[0]
+            marriage: result[0]
         });
-
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error updating marriage record:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-});
-
+}));
 // DELETE a marriage record
-export const deleteMarriage = asyncHandler(async (req: Request, res: Response) => {
+exports.deleteMarriage = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM marriages WHERE marriage_id = $1 RETURNING *', [id]);
-    if ((result as any[]).length === 0) {
+    const result = yield db_config_1.default.query('DELETE FROM marriages WHERE marriage_id = $1 RETURNING *', [id]);
+    if (result.length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
     res.json({ message: 'Marriage record deleted successfully' });
-});
+}));

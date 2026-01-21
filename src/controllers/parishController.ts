@@ -14,7 +14,7 @@ export const createParish = asyncHandler(async (req: Request, res: Response) => 
         "INSERT INTO parishes (parish_name, deanery) VALUES ($1, $2) RETURNING *",
         [parish_name]
     )
-    res.status(201).json(result.rows[0])
+    res.status(201).json(result as any[])
 })
 
 
@@ -22,7 +22,7 @@ export const createParish = asyncHandler(async (req: Request, res: Response) => 
 // Get all parishes
 export const getAllParishes = asyncHandler(async (req: Request, res: Response) => {
     const result = await pool.query("SELECT * FROM parishes ")
-    res.json(result.rows)
+    res.json(result as any[])
 })
 
 // Get parish by ID
@@ -32,10 +32,10 @@ export const getParishById = asyncHandler(async (req: Request, res: Response) =>
         "SELECT * FROM parishes WHERE parish_id = $1",
         [id]
     )
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         return res.status(404).json({ message: "Parish not found" })
     }
-    res.json(result.rows[0])
+    res.json((result as any[])[0])
 })
 
 
@@ -46,10 +46,10 @@ export const getParishByName = asyncHandler(async (req: Request, res: Response) 
         "SELECT * FROM parishes WHERE to_tsvector(parish_name) @@ plainto_tsquery($1)",
         [name]
     )
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         return res.status(404).json({ message: "Parish not found" })
     }
-    res.json(result.rows[0])
+    res.json((result as any[])[0])
 })
 export const getParishByDeanery = asyncHandler(async (req: Request, res: Response) => {
     const { deanery } = req.params
@@ -57,10 +57,10 @@ export const getParishByDeanery = asyncHandler(async (req: Request, res: Respons
         "SELECT * FROM parishes WHERE to_tsvector(deanery) @@ plainto_tsquery($1)",
         [deanery]
     )
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         return res.status(404).json({ message: "No parishes found for this deanery" })
     }
-    res.json(result.rows)
+    res.json((result as any[]))
 })
 
 // Update parish by PATCH
@@ -82,10 +82,10 @@ export const updateParish = asyncHandler(async (req: Request, res: Response) => 
         `UPDATE parishes SET ${fields.join(", ")} WHERE parish_id = $${idx} RETURNING *`,
         values
     )
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         return res.status(404).json({ message: "Parish not found" })
     }
-    res.json(result.rows[0])
+    res.json((result as any[])[0])
 })
 
 // Delete parish
@@ -95,7 +95,7 @@ export const deleteParish = asyncHandler(async (req: Request, res: Response) => 
         "DELETE FROM parishes WHERE parish_id = $1 RETURNING *",
         [id]
     )
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         return res.status(404).json({ message: "Parish not found" })
     }
     res.json({ message: "Parish deleted successfully" })

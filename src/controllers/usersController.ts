@@ -17,7 +17,7 @@ export const addUser = asyncHandler(async (req, res) => {
 
         // Check if email already exists
         const emailCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (emailCheck.rows.length > 0) {
+        if ((emailCheck as any[]).length > 0) {
             res.status(400).json({ message: "Email already in use" });
             return;
         }
@@ -40,7 +40,7 @@ export const addUser = asyncHandler(async (req, res) => {
             ]
         );
 
-        const user = newUser.rows[0];
+        const user = (newUser as any[])[0];
 
         //generate verification token
         const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
@@ -54,7 +54,7 @@ export const addUser = asyncHandler(async (req, res) => {
 
         res.status(201).json({
             message: "User successfully added",
-            user: newUser.rows[0],
+            user: (newUser as any[])[0],
         });
     } catch (error) {
         console.error("Error adding user:", error);
@@ -67,7 +67,7 @@ export const getUsers = asyncHandler(async (req, res) => {
     try {
         const
             result = await pool.query("SELECT * FROM users ORDER BY id ASC ")
-        res.json(result.rows)
+        res.json((result as any[]))
     } catch (error) {
         console.error("Error creating user:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -81,7 +81,7 @@ export const getUserCount = asyncHandler(async (_req: Request, res: Response) =>
         const result = await pool.query(
             "SELECT COUNT(*) AS usercount FROM users"
         );
-        const userCount: number = parseInt(result.rows[0].usercount, 10);
+        const userCount: number = parseInt((result as any[])[0].usercount, 10);
         res.json({ userCount });
         // console.log("User count:", userCount);
     } catch (error) {
@@ -99,11 +99,11 @@ export const getUserByName = asyncHandler(async (req, res) => {
             "SELECT * FROM users WHERE TRIM(LOWER(name)) = TRIM(LOWER($1))",
             [name]
         );
-        if (result.rows.length === 0) {
+        if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return;
         }
-        res.json(result.rows[0]);
+        res.json((result as any[])[0]);
     } catch (error) {
         console.error("Error fetching user by name:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -116,11 +116,11 @@ export const getUserById = asyncHandler(async (req, res) => {
         const { id } = req.params
         const
             result = await pool.query("SELECT * FROM users WHERE id = $1", [id])
-        if (result.rows.length === 0) {
+        if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return
         }
-        res.json(result.rows[0])
+        res.json((result as any[])[0])
     } catch (error) {
         console.error("Error creating user:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -140,7 +140,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 
         // Check if user exists
         const userCheck = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-        if (userCheck.rows.length === 0) {
+        if ((userCheck as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return;
         }
@@ -236,7 +236,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 
         res.json({
             message: "User successfully updated",
-            user: updatedUser.rows[0],
+            user: (updatedUser as any[])[0],
         });
     } catch (error) {
         console.error("Error updating user:", error);
@@ -250,7 +250,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
         const { id } = req.params
         const
             result = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [id])
-        if (result.rows.length === 0) {
+        if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return
         }

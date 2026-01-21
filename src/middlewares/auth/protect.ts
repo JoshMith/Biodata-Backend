@@ -51,14 +51,14 @@ export const protect = asyncHandler(async (req: UserRequest, res: Response, next
         );
 
 
-        if (userQuery.rows.length === 0) {
+        if ((userQuery as any[]).length === 0) {
             res.status(401).json({ message: "User not found" });
             return;
         }
 
 
         //attach the user to the request 
-        req.user = userQuery.rows[0]
+        req.user = (userQuery as any[])[0]
 
         next() //proceed to next thing 
 

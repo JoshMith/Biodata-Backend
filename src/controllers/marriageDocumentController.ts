@@ -49,25 +49,25 @@ export const createMarriageDocument = asyncHandler(async (req: Request, res: Res
         [marriage_id, document_type, file_name, file_path, file_size]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(result as any[]);
 });
 
 
 // READ ALL
 export const getMarriageDocuments = asyncHandler(async (req: Request, res: Response) => {
     const result = await pool.query('SELECT * FROM marriage_documents');
-    res.json(result.rows);
+    res.json(result as any[]);
 });
 
 // READ ONE
 export const getMarriageDocumentById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await pool.query('SELECT * FROM marriage_documents WHERE document_id = $1', [id]);
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
     }
-    res.json(result.rows[0]);
+    res.json((result as any[])[0]);
 });
 
 // UPDATE
@@ -80,11 +80,11 @@ export const updateMarriageDocument = asyncHandler(async (req: Request, res: Res
         [document_type, id]
     );
 
-    if (result.rows.length === 0) {
+    if ((result as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
     }
-    res.json(result.rows[0]);
+    res.json((result as any[])[0]);
 });
 
 // DELETE
@@ -93,11 +93,11 @@ export const deleteMarriageDocument = asyncHandler(async (req: Request, res: Res
 
     // Get file path before deleting
     const docResult = await pool.query('SELECT file_path FROM marriage_documents WHERE document_id = $1', [id]);
-    if (docResult.rows.length === 0) {
+    if ((docResult as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
     }
-    const filePath = docResult.rows[0].file_path;
+    const filePath = (docResult as any[])[0].file_path;
 
     await pool.query('DELETE FROM marriage_documents WHERE document_id = $1', [id]);
 
@@ -159,7 +159,7 @@ export const getMarriageDocumentList = asyncHandler(async (req: Request, res: Re
         [marriageId]
     );
 
-    const documents = result.rows.map(doc => ({
+    const documents = (result as any[]).map(doc => ({
         ...doc,
         // Ensure downloadUrl uses just the filename
         downloadUrl: `/marriage-documents/download/${encodeURIComponent(doc.file_path)}`

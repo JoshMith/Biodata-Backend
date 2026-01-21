@@ -15,7 +15,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
             [user_id, eucharist_date]
         );
 
-        if (eucharistCheck.rows.length > 0) {
+        if ((eucharistCheck as any[]).length > 0) {
             res.status(400).json({ message: "Eucharist record already exists for this user and date" });
             return;
         }
@@ -29,7 +29,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 
         res.status(201).json({
             message: "Eucharist record created successfully",
-            eucharist: eucharistResult.rows[0]
+            eucharist: (eucharistResult as any[])[0]
         });
 
     } catch (error) {
@@ -43,7 +43,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 export const getEucharist = asyncHandler(async (req: Request, res: Response) => {
     try {
         const result = await pool.query("SELECT * FROM eucharist ORDER BY eucharist_id ASC ");
-        res.json(result.rows);
+        res.json(result as any[]);
     } catch (error) {
         console.error("Error getting eucharist record:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -55,14 +55,14 @@ export const getEucharist = asyncHandler(async (req: Request, res: Response) => 
 export const getEucharistById = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const result = await pool.query("SELECT * FROM eucharist WHERE eucharist_id = $1", [id]);
+        const [result] = await pool.query("SELECT * FROM eucharist WHERE eucharist_id = $1", [id]) as any[];
 
-        if (result.rows.length === 0) {
+        if ((result as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record not found" });
             return
         }
 
-        res.json(result.rows[0]);
+        res.json((result as any[])[0]);
 
     } catch (error) {
         console.error("Error getting eucharist record:", error);
@@ -81,7 +81,7 @@ export const getEucharistByUserId = asyncHandler(async (req: Request, res: Respo
         //     return;
         // }
 
-        res.json(result.rows);
+        res.json(result as any[]);
 
     } catch (error) {
         console.error("Error getting eucharist records by user_id:", error);
@@ -122,14 +122,14 @@ export const updateEucharist = asyncHandler(async (req: Request, res: Response) 
 
         const eucharistResult = await pool.query(query, values);
 
-        if (eucharistResult.rows.length === 0) {
+        if ((eucharistResult as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record update failed" });
             return;
         }
 
         res.json({
             message: "Eucharist record updated successfully",
-            eucharist: eucharistResult.rows[0]
+            eucharist: (eucharistResult as any[])[0]
         });
 
     } catch (error) {
@@ -149,14 +149,14 @@ export const deleteEucharist = asyncHandler(async (req: Request, res: Response) 
             [id]
         );
 
-        if (eucharistResult.rows.length === 0) {
+        if ((eucharistResult as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record not found" });
             return
         }
 
         res.json({
             message: "Eucharist record deleted successfully",
-            book: eucharistResult.rows[0]
+            book: (eucharistResult as any[])[0]
         });
 
     } catch (error) {
