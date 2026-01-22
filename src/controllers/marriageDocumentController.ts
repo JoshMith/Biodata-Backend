@@ -45,7 +45,7 @@ export const createMarriageDocument = asyncHandler(async (req: Request, res: Res
 
     const result = await pool.query(
         `INSERT INTO marriage_documents (marriage_id, document_type, file_name, file_path, file_size)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+         VALUES (?, ?, ?, ?, ?) RETURNING *`,
         [marriage_id, document_type, file_name, file_path, file_size]
     );
 
@@ -62,7 +62,7 @@ export const getMarriageDocuments = asyncHandler(async (req: Request, res: Respo
 // READ ONE
 export const getMarriageDocumentById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriage_documents WHERE document_id = $1', [id]);
+    const result = await pool.query('SELECT * FROM marriage_documents WHERE document_id = ?', [id]);
     if ((result as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
@@ -76,7 +76,7 @@ export const updateMarriageDocument = asyncHandler(async (req: Request, res: Res
     const { document_type } = req.body;
 
     const result = await pool.query(
-        `UPDATE marriage_documents SET document_type = $1 WHERE document_id = $2 RETURNING *`,
+        `UPDATE marriage_documents SET document_type = ? WHERE document_id = ? RETURNING *`,
         [document_type, id]
     );
 
@@ -92,14 +92,14 @@ export const deleteMarriageDocument = asyncHandler(async (req: Request, res: Res
     const { id } = req.params;
 
     // Get file path before deleting
-    const docResult = await pool.query('SELECT file_path FROM marriage_documents WHERE document_id = $1', [id]);
+    const docResult = await pool.query('SELECT file_path FROM marriage_documents WHERE document_id = ?', [id]);
     if ((docResult as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
     }
     const filePath = (docResult as any[])[0].file_path;
 
-    await pool.query('DELETE FROM marriage_documents WHERE document_id = $1', [id]);
+    await pool.query('DELETE FROM marriage_documents WHERE document_id = ?', [id]);
 
     // Remove file from disk
     fs.unlink(filePath, (err) => {
@@ -155,7 +155,7 @@ export const getMarriageDocumentList = asyncHandler(async (req: Request, res: Re
     const { marriageId } = req.params;
 
     const result = await pool.query(
-        'SELECT * FROM marriage_documents WHERE marriage_id = $1',
+        'SELECT * FROM marriage_documents WHERE marriage_id = ?',
         [marriageId]
     );
 

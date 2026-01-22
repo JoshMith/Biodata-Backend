@@ -25,7 +25,7 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
             marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
             conducted_by, private_parties_count, private_parties_names
         ) VALUES (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+            ?,?,?,?,?,?,?,?,?,?,?,?
         ) RETURNING *`,
         [
             user_id,
@@ -54,7 +54,7 @@ export const getAllMarriages = asyncHandler(async (_req: Request, res: Response)
 // READ all marriage records for a specific user
 export const getUserMarriages = asyncHandler(async (req: Request, res: Response) => {
     const { user_id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE user_id = $1', [user_id]);
+    const result = await pool.query('SELECT * FROM marriages WHERE user_id = ?', [user_id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'No marriage records found for this user' });
     }
@@ -100,7 +100,7 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
         FROM marriages m
         LEFT JOIN marriage_parties mp ON m.marriage_id = mp.marriage_id
         LEFT JOIN marriage_documents md ON m.marriage_id = md.marriage_id
-        WHERE m.user_id = $1
+        WHERE m.user_id = ?
         GROUP BY m.marriage_id
         ORDER BY m.marriage_date DESC
     `;
@@ -119,7 +119,7 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
 // READ a single marriage record by ID
 export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE marriage_id = $1', [id]);
+    const result = await pool.query('SELECT * FROM marriages WHERE marriage_id = ?', [id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
@@ -224,7 +224,7 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 // DELETE a marriage record
 export const deleteMarriage = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM marriages WHERE marriage_id = $1 RETURNING *', [id]);
+    const result = await pool.query('DELETE FROM marriages WHERE marriage_id = ? RETURNING *', [id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }

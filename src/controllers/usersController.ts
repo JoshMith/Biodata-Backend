@@ -16,7 +16,7 @@ export const addUser = asyncHandler(async (req, res) => {
         } = req.body;
 
         // Check if email already exists
-        const emailCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        const emailCheck = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
         if ((emailCheck as any[]).length > 0) {
             res.status(400).json({ message: "Email already in use" });
             return;
@@ -32,7 +32,7 @@ export const addUser = asyncHandler(async (req, res) => {
                 email, password_hash, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father, 
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             ) RETURNING *`,
             [
                 email, hashedPassword, "member", phone_number, registration_number, first_name, last_name, middle_name, mother, father,
@@ -96,7 +96,7 @@ export const getUserByName = asyncHandler(async (req, res) => {
     try {
         const { name } = req.params;
         const result = await pool.query(
-            "SELECT * FROM users WHERE TRIM(LOWER(name)) = TRIM(LOWER($1))",
+            "SELECT * FROM users WHERE TRIM(LOWER(name)) = TRIM(LOWER(?))",
             [name]
         );
         if ((result as any[]).length === 0) {
@@ -115,7 +115,7 @@ export const getUserById = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
         const
-            result = await pool.query("SELECT * FROM users WHERE id = $1", [id])
+            result = await pool.query("SELECT * FROM users WHERE id = ?", [id])
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return
@@ -139,7 +139,7 @@ export const updateUser = asyncHandler(async (req, res) => {
         } = req.body;
 
         // Check if user exists
-        const userCheck = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+        const userCheck = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
         if ((userCheck as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return;
@@ -249,7 +249,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
         const
-            result = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [id])
+            result = await pool.query("DELETE FROM users WHERE id = ? RETURNING *", [id])
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return

@@ -10,7 +10,7 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
 
         // Optionally, check for duplicate confirmation_no for the same user
         const duplicateCheck = await pool.query(
-            "SELECT confirmation_id FROM confirmation WHERE confirmation_no = $1 AND user_id = $2",
+            "SELECT confirmation_id FROM confirmation WHERE confirmation_no = ? AND user_id = ?",
             [confirmation_no, user_id]
         );
 
@@ -22,7 +22,7 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
         // Proceed to create confirmation
         const confirmationResult = await pool.query(
             `INSERT INTO confirmation(confirmation_place, confirmation_date, confirmation_no, user_id, minister) 
-             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+             VALUES (?, ?, ?, ?, ?) RETURNING *`,
             [confirmation_place, confirmation_date, confirmation_no, user_id, minister]
         );
 
@@ -54,7 +54,7 @@ export const getConfirmation = asyncHandler(async (req: Request, res: Response) 
 export const getConfirmationById = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const [result] = await pool.query("SELECT * FROM confirmation WHERE confirmation_id = $1", [id]) as any[];
+        const [result] = await pool.query("SELECT * FROM confirmation WHERE confirmation_id = ?", [id]) as any[];
 
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "Confirmation record not found" });
@@ -73,7 +73,7 @@ export const getConfirmationById = asyncHandler(async (req: Request, res: Respon
 export const getConfirmationByUserId = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const result = await pool.query("SELECT * FROM confirmation WHERE user_id = $1", [userId]);
+        const result = await pool.query("SELECT * FROM confirmation WHERE user_id = ?", [userId]);
 
         // if (result.rows.length === 0) {
         //     res.status(400).json({ message: "No confirmation record found for the given user_id" });
@@ -152,7 +152,7 @@ export const deleteConfirmation = asyncHandler(async (req: Request, res: Respons
         const { id } = req.params;
 
         const [confirmationResult] = await pool.query(
-            "DELETE FROM confirmation WHERE confirmation_id = $1 RETURNING *",
+            "DELETE FROM confirmation WHERE confirmation_id = ? RETURNING *",
             [id]
         );
 

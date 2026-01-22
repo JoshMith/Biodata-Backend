@@ -28,7 +28,7 @@ export const createMarriageParty = asyncHandler(async (req: Request, res: Respon
             residence_county, residence_sub_county, occupation, father_name, father_occupation,
             father_residence, mother_name, mother_occupation, mother_residence
         ) VALUES (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         ) RETURNING *`,
         [
             marriage_id, party_type, full_name, age, marital_status, residence_address,
@@ -48,7 +48,7 @@ export const getMarriageParties = asyncHandler(async (req: Request, res: Respons
 // READ ONE
 export const getMarriagePartyById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriage_parties WHERE party_id = $1', [id]);
+    const result = await pool.query('SELECT * FROM marriage_parties WHERE party_id = ?', [id]);
     if ((result as any).length === 0) {
         res.status(404).json({ message: 'Marriage party not found' });
         return;
@@ -67,7 +67,7 @@ export const updateMarriageParty = asyncHandler(async (req: Request, res: Respon
     const updates = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
     const values = fields.map(field => req.body[field]);
     const result = await pool.query(
-        `UPDATE marriage_parties SET ${updates} WHERE party_id = $1 RETURNING *`,
+        `UPDATE marriage_parties SET ${updates} WHERE party_id = ? RETURNING *`,
         [id, ...values]
     );
     if ((result as any[]).length === 0) {
@@ -80,7 +80,7 @@ export const updateMarriageParty = asyncHandler(async (req: Request, res: Respon
 // DELETE
 export const deleteMarriageParty = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM marriage_parties WHERE party_id = $1 RETURNING *', [id]);
+    const result = await pool.query('DELETE FROM marriage_parties WHERE party_id = ? RETURNING *', [id]);
     if ((result as any[]).length === 0) {
         res.status(404).json({ message: 'Marriage party not found' });
         return;

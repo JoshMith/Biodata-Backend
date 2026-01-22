@@ -11,7 +11,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
         // Optional: Check if a eucharist record already exists for this user and date/place
         // (Remove or adjust this logic as needed for your business rules)
         const eucharistCheck = await pool.query(
-            "SELECT eucharist_id FROM eucharist WHERE user_id = $1 AND eucharist_date = $2",
+            "SELECT eucharist_id FROM eucharist WHERE user_id = ? AND eucharist_date = ?",
             [user_id, eucharist_date]
         );
 
@@ -23,7 +23,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
         // Proceed to create eucharist
         const eucharistResult = await pool.query(
             `INSERT INTO eucharist(eucharist_place, eucharist_date, user_id) 
-             VALUES ($1, $2, $3) RETURNING *`,
+             VALUES (?, ?, ?) RETURNING *`,
             [eucharist_place, eucharist_date, user_id]
         );
 
@@ -55,7 +55,7 @@ export const getEucharist = asyncHandler(async (req: Request, res: Response) => 
 export const getEucharistById = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const [result] = await pool.query("SELECT * FROM eucharist WHERE eucharist_id = $1", [id]) as any[];
+        const [result] = await pool.query("SELECT * FROM eucharist WHERE eucharist_id = ? ", [id]) as any[];
 
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record not found" });
@@ -74,7 +74,7 @@ export const getEucharistById = asyncHandler(async (req: Request, res: Response)
 export const getEucharistByUserId = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const result = await pool.query("SELECT * FROM eucharist WHERE user_id = $1", [userId]);
+        const result = await pool.query("SELECT * FROM eucharist WHERE user_id = ?", [userId]);
 
         // if (result.rows.length === 0) {
         //     res.status(400).json({ message: "No eucharist records found for the given user_id" });
@@ -145,7 +145,7 @@ export const deleteEucharist = asyncHandler(async (req: Request, res: Response) 
         const { id } = req.params;
 
         const eucharistResult = await pool.query(
-            "DELETE FROM eucharist WHERE eucharist_id = $1 RETURNING *",
+            "DELETE FROM eucharist WHERE eucharist_id = ? RETURNING *",
             [id]
         );
 

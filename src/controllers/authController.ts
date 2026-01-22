@@ -32,7 +32,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             `INSERT INTO users
                 (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [first_name, last_name, middle_name, email, hashedPassword, "superuser", phone_number, parish_id]
+            [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
         );
 
         // ✅ FIXED: Get insertId from MySQL result
