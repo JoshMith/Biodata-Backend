@@ -27,7 +27,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     const newUser = await pool.query(
         `INSERT INTO users
             (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING *`,
         [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
     );
