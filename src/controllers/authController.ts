@@ -8,66 +8,95 @@ import { sendVerificationEmail } from "../utils/helpers/sendEmail";
 
 
 export const registerUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { first_name, last_name, middle_name, email, password, phone_number, parish_id } = req.body;
 
-    const { first_name, last_name, middle_name, email, password, phone_number, parish_id } = req.body;
+        console.log("Attempting to register:", email); // Debug log
 
-    // Check if user exists
-    const [userExists] = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-
-    if ((userExists as any[]).length > 0) {
-        res.status(400).json({ message: "User already exists. Go to login..." });
-        return;
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Insert into users table
-    const newUser = await pool.query(
-        `INSERT INTO users
-            (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-         RETURNING *`,
-        [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
-    );
-
-    const user = (newUser as any).rows[0];
-
-    // Fetch parish name for the user
-    let parishName: string | null = null;
-    if (user.parish_id) {
-        const [parishResult] = await pool.query(
-            `SELECT parish_name FROM parishes WHERE parish_id = $1`,
-            [user.parish_id]
-        ) as any;
-        parishName = (parishResult as any[])[0]?.parish_name || null;
-    }
-
-
-    //generate verification token
-    const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
-
-    //send verification email
-    await sendVerificationEmail(user.email, emailToken)
-
-    // Generate the JWT token (custom function for token generation)
-    await generateToken(res, user.id, user.role);
-
-    res.status(201).json({
-        message: "User registered successfully.Please Chck your email to verify your account",
-        user: {
-            id: user.id,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            middleName: user.middle_name,
-            email: user.email,
-            role: user.role,
-            verified: user.verified,
-            parishId: user.parish_id,
-            parishName: parishName,
+        // ✅ FIXED: Use ? for MySQL
+        const [userExistsRows] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
+        
+        // Convert to array properly for MySQL
+        const userExistsArray = userExistsRows as any[];
+        if (userExistsArray.length > 0) {
+            res.status(400).json({ message: "User already exists. Go to login..." });
+            return;
         }
-    });
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // ✅ FIXED: Remove RETURNING * and use proper MySQL insert
+        const insertResult = await pool.query(
+            `INSERT INTO users
+                (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
+        );
+
+        // ✅ FIXED: Get insertId from MySQL result
+        const insertId = (insertResult as any)[0]?.insertId;
+        
+        if (!insertId) {
+            throw new Error("Failed to get user ID after insertion");
+        }
+
+        // ✅ FIXED: Fetch the user using the insertId
+        const [userRows] = await pool.query("SELECT * FROM users WHERE id = ?", [insertId]);
+        const userArray = userRows as any[];
+        const user = userArray[0];
+
+        if (!user) {
+            throw new Error("User not found after creation");
+        }
+
+        // ✅ FIXED: Use ? for MySQL
+        let parishName: string | null = null;
+        if (user.parish_id) {
+            const [parishRows] = await pool.query(
+                `SELECT parish_name FROM parishes WHERE parish_id = ?`,
+                [user.parish_id]
+            );
+            const parishArray = parishRows as any[];
+            parishName = parishArray[0]?.parish_name || null;
+        }
+
+        // Generate verification token
+        const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+
+        // Send verification email (don't await if you want to continue)
+        sendVerificationEmail(user.email, emailToken).catch(err => {
+            console.error("Email sending failed:", err);
+        });
+
+        // Generate JWT token
+        await generateToken(res, user.id, user.role);
+
+        res.status(201).json({
+            message: "User registered successfully. Please check your email to verify your account",
+            user: {
+                id: user.id,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                middleName: user.middle_name,
+                email: user.email,
+                role: user.role,
+                verified: user.verified || false,
+                parishId: user.parish_id,
+                parishName: parishName,
+            }
+        });
+
+    } catch (error) {
+        console.error("❌ Registration error:", error);
+
+        
+        res.status(500).json({ 
+            message: "Internal server error during registration",
+            error: (error as Error).message
+        });
+    }
 });
 
 
