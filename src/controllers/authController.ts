@@ -32,7 +32,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             `INSERT INTO users
                 (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [first_name, last_name, middle_name, email, hashedPassword, "member", phone_number, parish_id]
+            [first_name, last_name, middle_name, email, hashedPassword, "superuser", phone_number, parish_id]
         );
 
         // ✅ FIXED: Get insertId from MySQL result
@@ -108,7 +108,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     const [userQuery] = await pool.query(
         `SELECT users.id, users.first_name, users.last_name, users.middle_name, users.email, users.password_hash, users.role, users.parish_id
         FROM users
-        WHERE email = $1`,
+        WHERE email = ?`,
         [email]
     ) as any;
 
@@ -122,7 +122,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 
     // Check if user is verified
     const [verifiedQuery] = await pool.query(
-        `SELECT verified FROM users WHERE email = $1`,
+        `SELECT verified FROM users WHERE email = ?`,
         [email]
     ) as any;
     if ((verifiedQuery as any[]).length === 0 || !(verifiedQuery as any[])[0].verified) {
@@ -140,7 +140,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
     let parishName: string | null = null;
     if (user.parish_id) {
         const [parishResult] = await pool.query(
-            `SELECT parish_name FROM parishes WHERE parish_id = $1`,
+            `SELECT parish_name FROM parishes WHERE parish_id = ?`,
             [user.parish_id]
         ) as any;
         parishName = (parishResult as any[])[0]?.parish_name || null;
@@ -182,7 +182,7 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
 
         // Update user as verified
         const [result] = await pool.query(
-            "UPDATE users SET verified = TRUE WHERE id = $1 RETURNING id, email, verified",
+            "UPDATE users SET verified = TRUE WHERE id = ? RETURNING id, email, verified",
             [decoded.userId]
         ) as any;
 
