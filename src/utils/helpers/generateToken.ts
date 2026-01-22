@@ -4,10 +4,6 @@ import jwt from 'jsonwebtoken'
 
 dotenv.config()
 
-//Debugging  - check if env var are loaded correctly  
-// console.log("JWT_SECRET: ", process.env.JWT_SECRET )
-// console.log("REFRESH_TOKEN_SECRET: ", process.env.REFRESH_TOKEN_SECRET )
-
 export const generateToken = (res: Response, userId: string, role: string) => {
     const jwtSecret = process.env.JWT_SECRET;
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
@@ -17,29 +13,29 @@ export const generateToken = (res: Response, userId: string, role: string) => {
     }
 
     try {
-        //Lets generate a short - lived acccess token for 60 minutes
-        // sign(payload: string | Buffer | object, secretOrPrivateKey: null, options?: jwt.SignOptions & { algorithm: "none"; }): string
-        const accessToken = jwt.sign({ userId, role }, jwtSecret, { expiresIn: "60m" })
-        //Lets generate a long - lived acccess token for 30days
+        const accessToken = jwt.sign({ userId, role }, jwtSecret, { expiresIn: "24h" })
         const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: "30d" })
 
-        //set Access token as HTTP-Only secure cookie 
-        res.cookie("access_token", accessToken, {
-            httpOnly: true,
-            secure: true, // Secure in production
-            sameSite: "none",
-            maxAge: 60 * 60 * 1000, // 60 minutes
-        });
-
-
-        // Set Refresh Token as HTTP-Only Secure Cookie
-        res.cookie("refresh_token", refreshToken, {
+        // Cookie settings for production with proxy
+        const cookieOptions = {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            sameSite: "none" as const,
+            path: "/", // IMPORTANT: Set path to root so it's sent to /api too
+            domain: ".cbms.adnyeri.org", // IMPORTANT: Use dot prefix for subdomains
+        };
+
+        // Set Access token
+        res.cookie("access_token", accessToken, {
+            ...cookieOptions,
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
         });
 
+        // Set Refresh Token
+        res.cookie("refresh_token", refreshToken, {
+            ...cookieOptions,
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
 
         return { accessToken, refreshToken }
 
