@@ -35,9 +35,13 @@ const allowedOrigins = ['https://cbms.adnyeri.org', 'http://localhost:4200'];
 app.use(cors({
     // origin: allowedOrigins,
     origin: true,
-    methods: "GET, POST, PUT, PATCH, DELETE",
-    credentials: true // allows cookies and auth headers
+    methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    credentials: true, // allows cookies and auth headers
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie']
 }))
+
+app.set('trust proxy', true); // trust first proxy if behind a proxy (e.g., Heroku, Nginx)
 
 
 
