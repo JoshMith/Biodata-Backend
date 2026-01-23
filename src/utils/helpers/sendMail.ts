@@ -1,27 +1,25 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
+export const sendVerificationEmail = async (to: string, token: string) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT || "587"),
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-export const sendVerificationEmail =async (to:string,token:string)=>{
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || "587"),
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const verificationLink=`${process.env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}`;
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
-        subject: 'Welcome to Christian Data Management System - Email Verification',
-        html: `
+  const verificationLink = `${process.env.FRONTEND_URL}/verifyEmail?token=${encodeURIComponent(token)}`;
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject: "Welcome to Christian Data Management System - Email Verification",
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -86,16 +84,16 @@ export const sendVerificationEmail =async (to:string,token:string)=>{
             </body>
             </html>
         `,
-    }
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Verification email sent successfully to:', to);
-        return { success: true, message: 'Verification email sent successfully' };
-    } catch (error) {
-        console.error('Error sending email:',error);
-        throw new Error('Could not send verification email')
-    }
-}
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Verification email sent successfully to:", to);
+    return { success: true, message: "Verification email sent successfully" };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Could not send verification email");
+  }
+};
 
 export const sendPasswordResetEmail = async (
   email: string,
