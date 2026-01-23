@@ -18,7 +18,7 @@ export const sendVerificationEmail = async (to: string, token: string) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
-    subject: "Welcome to Christian Data Management System - Email Verification",
+    subject: "Welcome to CBMS Archdiocese of Nyeri - Email Verification",
     html: `
             <!DOCTYPE html>
             <html>
