@@ -3,7 +3,7 @@ import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
-import { sendVerificationEmail } from "../utils/helpers/sendEmail";
+import { sendVerificationEmail } from "../utils/helpers/sendVerificationEmail";
 import { generateToken } from "../utils/helpers/generateToken"
 
 
@@ -146,76 +146,75 @@ export const updateUser = asyncHandler(async (req, res) => {
         // Prepare fields for update
         const fieldsToUpdate = [];
         const values = [];
-        let index = 1;
 
         if (email) {
-            fieldsToUpdate.push(`email=$${index++}`);
+            fieldsToUpdate.push(`email= ?`);
             values.push(email);
         }
         if (password) {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            fieldsToUpdate.push(`password_hash=$${index++}`);
+            fieldsToUpdate.push(`password_hash=?`);
             values.push(hashedPassword);
         }
         if (role) {
-            fieldsToUpdate.push(`role=$${index++}`);
+            fieldsToUpdate.push(`role=?`);
             values.push(role);
         }
         if (phone_number) {
-            fieldsToUpdate.push(`phone_number=$${index++}`);
+            fieldsToUpdate.push(`phone_number=?`);
             values.push(phone_number);
         }
         if (registration_number) {
-            fieldsToUpdate.push(`registration_number=$${index++}`);
+            fieldsToUpdate.push(`registration_number=?`);
             values.push(registration_number);
         }
         if (first_name) {
-            fieldsToUpdate.push(`first_name=$${index++}`);
+            fieldsToUpdate.push(`first_name=?`);
             values.push(first_name);
         }
         if (last_name) {
-            fieldsToUpdate.push(`last_name=$${index++}`);
+            fieldsToUpdate.push(`last_name=?`);
             values.push(last_name);
         }
         if (middle_name) {
-            fieldsToUpdate.push(`middle_name=$${index++}`);
+            fieldsToUpdate.push(`middle_name=?`);
             values.push(middle_name);
         }
         if (mother) {
-            fieldsToUpdate.push(`mother=$${index++}`);
+            fieldsToUpdate.push(`mother=?`);
             values.push(mother);
         }
         if (father) {
-            fieldsToUpdate.push(`father=$${index++}`);
+            fieldsToUpdate.push(`father=?`);
             values.push(father);
         }
         if (birth_place) {
-            fieldsToUpdate.push(`birth_place=$${index++}`);
+            fieldsToUpdate.push(`birth_place=?`);
             values.push(birth_place);
         }
         if (subcounty) {
-            fieldsToUpdate.push(`subcounty=$${index++}`);
+            fieldsToUpdate.push(`subcounty=?`);
             values.push(subcounty);
         }
         if (birth_date) {
-            fieldsToUpdate.push(`birth_date=$${index++}`);
+            fieldsToUpdate.push(`birth_date=?`);
             values.push(birth_date);
         }
         if (tribe) {
-            fieldsToUpdate.push(`tribe=$${index++}`);
+            fieldsToUpdate.push(`tribe=?`);
             values.push(tribe);
         }
         if (clan) {
-            fieldsToUpdate.push(`clan=$${index++}`);
+            fieldsToUpdate.push(`clan=?`);
             values.push(clan);
         }
         if (residence) {
-            fieldsToUpdate.push(`residence=$${index++}`);
+            fieldsToUpdate.push(`residence=?`);
             values.push(residence);
         }
         if (parish_id) {
-            fieldsToUpdate.push(`parish_id=$${index++}`);
+            fieldsToUpdate.push(`parish_id=?`);
             values.push(parish_id);
         }
 
@@ -228,7 +227,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 
         // Update the user
         const [updatedUser] = await pool.query(
-            `UPDATE users SET ${fieldsToUpdate.join(", ")} WHERE id = $${index}`,
+            `UPDATE users SET ${fieldsToUpdate.join(", ")} WHERE id = ?`,
             values
         );
 
