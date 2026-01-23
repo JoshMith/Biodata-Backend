@@ -157,7 +157,6 @@ app.listen(port, () => {
     console.log(`🚀🚀Server is running on port: ${port}`)
     console.log('Link to access the server: https://cbms.adnyeri.org/api/')
     console.log(`Version: 1.0.12`)
-    // ensure server time matches EAT
     console.log(`Server time: ${new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" })}`)
     console.log(`Environment: ${process.env.NODE_ENV}`)
 })
