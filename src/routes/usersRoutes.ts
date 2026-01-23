@@ -13,13 +13,13 @@ import { superUserEditorGuard, allGuard, allViewersGuard, superuserGuard, ownUse
 
 const router = express.Router();
 
-router.post("/", protect, superUserEditorGuard, addUser);
-router.get("/", protect, allGuard, getUsers);
-router.get("/count", protect, allGuard, getUserCount);
-router.get("/name/:name", protect, allGuard, getUserByName);
-router.get("/:id", protect, allGuard, getUserById);
-router.put("/:id", protect, ownUserSuperUserEditorGuard, updateUser);
-router.delete("/:id", protect, superuserGuard, deleteUser);
+router.post("/", protect,  addUser);
+router.get("/", protect,  getUsers);
+router.get("/count", protect,  getUserCount);
+router.get("/name/:name", protect,  getUserByName);
+router.get("/:id", protect,  getUserById);
+router.put("/:id", protect,  updateUser);
+router.delete("/:id", protect,  deleteUser);
 
 
 export default router;
