@@ -4,8 +4,7 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/helpers/generateToken";
 import asyncHandler from "../middlewares/asyncHandler";
 import jwt from "jsonwebtoken";
-import { sendVerificationEmail } from "../utils/helpers/sendVerificationEmail";
-import { sendPasswordResetEmail } from "../utils/helpers/sendResetPasswordEmail";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../utils/helpers/sendMail";
 
 export const registerUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {

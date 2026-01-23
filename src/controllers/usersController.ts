@@ -3,8 +3,7 @@ import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
-import { sendVerificationEmail } from "../utils/helpers/sendVerificationEmail";
-import { generateToken } from "../utils/helpers/generateToken"
+import { sendVerificationEmail } from "../utils/helpers/sendMail";
 
 
 // Add a new user
