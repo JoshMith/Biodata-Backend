@@ -10,7 +10,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 
         // Optional: Check if a eucharist record already exists for this user and date/place
         // (Remove or adjust this logic as needed for your business rules)
-        const eucharistCheck = await pool.query(
+        const [eucharistCheck] = await pool.query(
             "SELECT eucharist_id FROM eucharist WHERE user_id = ? AND eucharist_date = ?",
             [user_id, eucharist_date]
         );
@@ -21,9 +21,9 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
         }
 
         // Proceed to create eucharist
-        const eucharistResult = await pool.query(
+        const [eucharistResult] = await pool.query(
             `INSERT INTO eucharist(eucharist_place, eucharist_date, user_id) 
-             VALUES (?, ?, ?) RETURNING *`,
+             VALUES (?, ?, ?) `,
             [eucharist_place, eucharist_date, user_id]
         );
 
@@ -42,7 +42,7 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 //Get All eucharist
 export const getEucharist = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const result = await pool.query("SELECT * FROM eucharist ORDER BY eucharist_id ASC ");
+        const [result] = await pool.query("SELECT * FROM eucharist ORDER BY eucharist_id ASC ");
         res.json(result as any[]);
     } catch (error) {
         console.error("Error getting eucharist record:", error);
@@ -74,7 +74,7 @@ export const getEucharistById = asyncHandler(async (req: Request, res: Response)
 export const getEucharistByUserId = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const result = await pool.query("SELECT * FROM eucharist WHERE user_id = ?", [userId]);
+        const [result] = await pool.query("SELECT * FROM eucharist WHERE user_id = ?", [userId]);
 
         // if (result.rows.length === 0) {
         //     res.status(400).json({ message: "No eucharist records found for the given user_id" });
@@ -118,9 +118,9 @@ export const updateEucharist = asyncHandler(async (req: Request, res: Response) 
         }
 
         values.push(id);
-        const query = `UPDATE eucharist SET ${fieldsToUpdate.join(", ")} WHERE eucharist_id = $${index} RETURNING *`;
+        const query = `UPDATE eucharist SET ${fieldsToUpdate.join(", ")} WHERE eucharist_id = $${index}`;
 
-        const eucharistResult = await pool.query(query, values);
+        const [eucharistResult] = await pool.query(query, values);
 
         if ((eucharistResult as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record update failed" });
@@ -144,8 +144,8 @@ export const deleteEucharist = asyncHandler(async (req: Request, res: Response) 
     try {
         const { id } = req.params;
 
-        const eucharistResult = await pool.query(
-            "DELETE FROM eucharist WHERE eucharist_id = ? RETURNING *",
+        const [eucharistResult] = await pool.query(
+            "DELETE FROM eucharist WHERE eucharist_id = ?",
             [id]
         );
 

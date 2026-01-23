@@ -27,7 +27,6 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // ✅ FIXED: Remove RETURNING * and use proper MySQL insert
         const insertResult = await pool.query(
             `INSERT INTO users
                 (first_name, last_name, middle_name, email, password_hash, role, phone_number, parish_id)
@@ -126,7 +125,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
         [email]
     ) as any;
     if ((verifiedQuery as any[]).length === 0 || !(verifiedQuery as any[])[0].verified) {
-        return res.status(401).json({ message: "Please verify your email before logging in." });
+        return res.status(401).json({ message: "Please verify your email before logging in. Check your email for the verification link." });
     }
 
     // Compare the entered password with the stored hash
@@ -167,30 +166,38 @@ export const loginUser = asyncHandler(async (req: Request, res: Response, next: 
 });
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
-
-    // console.log("verify email called")
     const token = req.query.token as string;
-    console.log("recived token")
+    console.log("received token");
+    
     if (!token) {
         return res.status(400).json({ message: "Invalid or missing token" });
     }
-
 
     try {
         // Decode the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
 
-        // Update user as verified
+        //  Update user as verified
         const [result] = await pool.query(
-            "UPDATE users SET verified = TRUE WHERE id = ? RETURNING id, email, verified",
+            "UPDATE users SET verified = TRUE WHERE id = ?",
             [decoded.userId]
-        ) as any;
+        );
 
-        if ((result as any[]).length === 0) {
+        //  Check affectedRows
+        if ((result as any).affectedRows === 0) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        return res.status(200).json({ message: "Email successfully verified", user: (result as any[])[0] });
+        //  Fetch the updated user separately
+        const [userRows] = await pool.query(
+            "SELECT id, email, verified FROM users WHERE id = ?",
+            [decoded.userId]
+        );
+
+        return res.status(200).json({ 
+            message: "Email successfully verified", 
+            user: (userRows as any[])[0] 
+        });
 
     } catch (error) {
         return res.status(400).json({ message: "Invalid or expired token" });

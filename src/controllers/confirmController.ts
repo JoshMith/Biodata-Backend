@@ -9,7 +9,7 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
         const { confirmation_place, confirmation_date, confirmation_no, user_id, minister } = req.body;
 
         // Optionally, check for duplicate confirmation_no for the same user
-        const duplicateCheck = await pool.query(
+        const [duplicateCheck] = await pool.query(
             "SELECT confirmation_id FROM confirmation WHERE confirmation_no = ? AND user_id = ?",
             [confirmation_no, user_id]
         );
@@ -20,9 +20,9 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
         }
 
         // Proceed to create confirmation
-        const confirmationResult = await pool.query(
+        const [confirmationResult] = await pool.query(
             `INSERT INTO confirmation(confirmation_place, confirmation_date, confirmation_no, user_id, minister) 
-             VALUES (?, ?, ?, ?, ?) RETURNING *`,
+             VALUES (?, ?, ?, ?, ?) `,
             [confirmation_place, confirmation_date, confirmation_no, user_id, minister]
         );
 
@@ -41,7 +41,7 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
 //Get All confirmation
 export const getConfirmation = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const result = await pool.query("SELECT * FROM confirmation ORDER BY confirmation_id ASC ");
+        const [result] = await pool.query("SELECT * FROM confirmation ORDER BY confirmation_id ASC ");
         res.json(result as any[]);
     } catch (error) {
         console.error("Error getting confirmation record:", error);
@@ -73,7 +73,7 @@ export const getConfirmationById = asyncHandler(async (req: Request, res: Respon
 export const getConfirmationByUserId = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const result = await pool.query("SELECT * FROM confirmation WHERE user_id = ?", [userId]);
+        const [result] = await pool.query("SELECT * FROM confirmation WHERE user_id = ?", [userId]);
 
         // if (result.rows.length === 0) {
         //     res.status(400).json({ message: "No confirmation record found for the given user_id" });
@@ -125,7 +125,7 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
         }
 
         values.push(id);
-        const query = `UPDATE confirmation SET ${fieldsToUpdate.join(", ")} WHERE confirmation_id = $${index} RETURNING *`;
+        const query = `UPDATE confirmation SET ${fieldsToUpdate.join(", ")} WHERE confirmation_id = $${index}`;
 
         const [confirmationResult] = await pool.query(query, values) as any[];
 
@@ -152,7 +152,7 @@ export const deleteConfirmation = asyncHandler(async (req: Request, res: Respons
         const { id } = req.params;
 
         const [confirmationResult] = await pool.query(
-            "DELETE FROM confirmation WHERE confirmation_id = ? RETURNING *",
+            "DELETE FROM confirmation WHERE confirmation_id = ?",
             [id]
         );
 

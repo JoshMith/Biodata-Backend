@@ -26,7 +26,7 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
             conducted_by, private_parties_count, private_parties_names
         ) VALUES (
             ?,?,?,?,?,?,?,?,?,?,?,?
-        ) RETURNING *`,
+        )`,
         [
             user_id,
             certificate_number,
@@ -47,14 +47,14 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
 
 // READ all marriage records
 export const getAllMarriages = asyncHandler(async (_req: Request, res: Response) => {
-    const result = await pool.query('SELECT * FROM marriages');
+    const [result] = await pool.query('SELECT * FROM marriages');
     res.json(result as any[]);
 });
 
 // READ all marriage records for a specific user
 export const getUserMarriages = asyncHandler(async (req: Request, res: Response) => {
     const { user_id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE user_id = ?', [user_id]);
+    const [result] = await pool.query('SELECT * FROM marriages WHERE user_id = ?', [user_id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'No marriage records found for this user' });
     }
@@ -105,7 +105,7 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
         ORDER BY m.marriage_date DESC
     `;
 
-    const result = await pool.query(query, [user_id]);
+    const [result] = await pool.query(query, [user_id]);
     
     if ((result as any[]).length === 0) {
         return res.status(404).json({ 
@@ -119,7 +119,7 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
 // READ a single marriage record by ID
 export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriages WHERE marriage_id = ?', [id]);
+    const [result] = await pool.query('SELECT * FROM marriages WHERE marriage_id = ?', [id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
@@ -202,9 +202,9 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
 
         values.push(id);
-        const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index} RETURNING *`;
+        const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index}`;
 
-        const result = await pool.query(query, values);
+        const [result] = await pool.query(query, values);
 
         if ((result as any[]).length === 0) {
             return res.status(404).json({ error: 'Marriage record not found' });
@@ -224,7 +224,7 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 // DELETE a marriage record
 export const deleteMarriage = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM marriages WHERE marriage_id = ? RETURNING *', [id]);
+    const [result] = await pool.query('DELETE FROM marriages WHERE marriage_id = ?', [id]);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }

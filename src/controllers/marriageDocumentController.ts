@@ -43,9 +43,9 @@ export const createMarriageDocument = asyncHandler(async (req: Request, res: Res
     const file_path = file.filename; // Just the filename
     const file_size = file.size;
 
-    const result = await pool.query(
+    const [result] = await pool.query(
         `INSERT INTO marriage_documents (marriage_id, document_type, file_name, file_path, file_size)
-         VALUES (?, ?, ?, ?, ?) RETURNING *`,
+         VALUES (?, ?, ?, ?, ?)`,
         [marriage_id, document_type, file_name, file_path, file_size]
     );
 
@@ -55,14 +55,14 @@ export const createMarriageDocument = asyncHandler(async (req: Request, res: Res
 
 // READ ALL
 export const getMarriageDocuments = asyncHandler(async (req: Request, res: Response) => {
-    const result = await pool.query('SELECT * FROM marriage_documents');
+    const [result] = await pool.query('SELECT * FROM marriage_documents');
     res.json(result as any[]);
 });
 
 // READ ONE
 export const getMarriageDocumentById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM marriage_documents WHERE document_id = ?', [id]);
+    const [result] = await pool.query('SELECT * FROM marriage_documents WHERE document_id = ?', [id]);
     if ((result as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
@@ -75,8 +75,8 @@ export const updateMarriageDocument = asyncHandler(async (req: Request, res: Res
     const { id } = req.params;
     const { document_type } = req.body;
 
-    const result = await pool.query(
-        `UPDATE marriage_documents SET document_type = ? WHERE document_id = ? RETURNING *`,
+    const [result] = await pool.query(
+        `UPDATE marriage_documents SET document_type = ? WHERE document_id = ?`,
         [document_type, id]
     );
 
@@ -92,7 +92,7 @@ export const deleteMarriageDocument = asyncHandler(async (req: Request, res: Res
     const { id } = req.params;
 
     // Get file path before deleting
-    const docResult = await pool.query('SELECT file_path FROM marriage_documents WHERE document_id = ?', [id]);
+    const [docResult] = await pool.query('SELECT file_path FROM marriage_documents WHERE document_id = ?', [id]);
     if ((docResult as any[]).length === 0) {
         res.status(404);
         throw new Error('Document not found');
@@ -154,7 +154,7 @@ export const downloadMarriageDocument = asyncHandler(async (req: Request, res: R
 export const getMarriageDocumentList = asyncHandler(async (req: Request, res: Response) => {
     const { marriageId } = req.params;
 
-    const result = await pool.query(
+    const [result] = await pool.query(
         'SELECT * FROM marriage_documents WHERE marriage_id = ?',
         [marriageId]
     );
