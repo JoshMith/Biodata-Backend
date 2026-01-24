@@ -68,8 +68,8 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
     const query = `
         SELECT 
             m.*,
-            json_agg(
-                DISTINCT jsonb_build_object(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
                     'party_id', mp.party_id,
                     'party_type', mp.party_type,
                     'full_name', mp.full_name,
@@ -87,19 +87,20 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
                     'mother_residence', mp.mother_residence
                 )
             ) AS parties,
-            json_agg(
-                DISTINCT jsonb_build_object(
-                    'document_id', md.document_id,
-                    'document_type', md.document_type,
-                    'file_name', md.file_name,
-                    'file_path', md.file_path,
-                    'file_size', md.file_size,
-                    'uploaded_at', md.uploaded_at
+            (SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'document_id', md2.document_id,
+                    'document_type', md2.document_type,
+                    'file_name', md2.file_name,
+                    'file_path', md2.file_path,
+                    'file_size', md2.file_size,
+                    'uploaded_at', md2.uploaded_at
                 )
-            ) AS documents
+            )
+            FROM marriage_documents md2
+            WHERE md2.marriage_id = m.marriage_id) AS documents
         FROM marriages m
         LEFT JOIN marriage_parties mp ON m.marriage_id = mp.marriage_id
-        LEFT JOIN marriage_documents md ON m.marriage_id = md.marriage_id
         WHERE m.user_id = ?
         GROUP BY m.marriage_id
         ORDER BY m.marriage_date DESC

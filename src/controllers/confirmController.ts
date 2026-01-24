@@ -129,15 +129,18 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
 
         const [confirmationResult] = await pool.query(query, values) as any[];
 
-        if ((confirmationResult as any[]).length === 0) {
-            res.status(400).json({ message: "Confirmation record update failed" });
-            return;
-        }
+    if (confirmationResult.affectedRows === 0) {
+        res.status(404).json({ message: "Confirmation record not found" });
+        return;
+    }
 
-        res.json({
-            message: "Confirmation record updated successfully",
-            confirmation: confirmationResult.rows[0]
-        });
+    // Fetch the updated record
+    const [updated] = await pool.query('SELECT * FROM confirmation WHERE confirmation_id = ?', [id]);
+
+    res.json({
+        message: "Confirmation record updated successfully",
+        confirmation: (updated as any[])[0]
+    });
 
     } catch (error) {
         console.error("Error updating confirmation record:", error);

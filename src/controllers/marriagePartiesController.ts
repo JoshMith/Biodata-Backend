@@ -59,22 +59,53 @@ export const getMarriagePartyById = asyncHandler(async (req: Request, res: Respo
 // UPDATE
 export const updateMarriageParty = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const fields = [
-        'marriage_id', 'party_type', 'full_name', 'age', 'marital_status', 'residence_address',
-        'residence_county', 'residence_sub_county', 'occupation', 'father_name', 'father_occupation',
-        'father_residence', 'mother_name', 'mother_occupation', 'mother_residence'
-    ];
-    const updates = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
-    const values = fields.map(field => req.body[field]);
-    const [result] = await pool.query(
-        `UPDATE marriage_parties SET ${updates} WHERE party_id = ?`,
-        [id, ...values]
-    );
-    if ((result as any[]).length === 0) {
+    
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    
+    const possibleFields = {
+        marriage_id: req.body.marriage_id,
+        party_type: req.body.party_type,
+        full_name: req.body.full_name,
+        age: req.body.age,
+        marital_status: req.body.marital_status,
+        residence_address: req.body.residence_address,
+        residence_county: req.body.residence_county,
+        residence_sub_county: req.body.residence_sub_county,
+        occupation: req.body.occupation,
+        father_name: req.body.father_name,
+        father_occupation: req.body.father_occupation,
+        father_residence: req.body.father_residence,
+        mother_name: req.body.mother_name,
+        mother_occupation: req.body.mother_occupation,
+        mother_residence: req.body.mother_residence
+    };
+
+    Object.entries(possibleFields).forEach(([key, value]) => {
+        if (value !== undefined) {
+            fieldsToUpdate.push(`${key} = ?`);
+            values.push(value);
+        }
+    });
+
+    if (fieldsToUpdate.length === 0) {
+        res.status(400).json({ message: 'No fields to update' });
+        return;
+    }
+
+    values.push(id);
+    const query = `UPDATE marriage_parties SET ${fieldsToUpdate.join(', ')} WHERE party_id = ?`;
+    
+    const [result] = await pool.query(query, values);
+    
+    if ((result as any).affectedRows === 0) {
         res.status(404).json({ message: 'Marriage party not found' });
         return;
     }
-    res.json((result as any[])[0]);
+    
+    // Fetch and return the updated record
+    const [updated] = await pool.query('SELECT * FROM marriage_parties WHERE party_id = ?', [id]);
+    res.json((updated as any[])[0]);
 });
 
 // DELETE
