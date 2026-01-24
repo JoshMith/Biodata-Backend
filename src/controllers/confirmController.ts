@@ -98,23 +98,23 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
         let index = 1;
 
         if (confirmation_place) {
-            fieldsToUpdate.push(`confirmation_place = $${index++}`);
+            fieldsToUpdate.push(`confirmation_place = ?`);
             values.push(confirmation_place);
         }
         if (confirmation_date) {
-            fieldsToUpdate.push(`confirmation_date = $${index++}`);
+            fieldsToUpdate.push(`confirmation_date = ?`);
             values.push(confirmation_date);
         }
         if (confirmation_no) {
-            fieldsToUpdate.push(`confirmation_no = $${index++}`);
+            fieldsToUpdate.push(`confirmation_no = ?`);
             values.push(confirmation_no);
         }
         if (minister) {
-            fieldsToUpdate.push(`minister = $${index++}`);
+            fieldsToUpdate.push(`minister = ?`);
             values.push(minister);
         }
         if (user_id) {
-            fieldsToUpdate.push(`user_id = $${index++}`);
+            fieldsToUpdate.push(`user_id = ?`);
             values.push(user_id);
         }
         
@@ -125,7 +125,7 @@ export const updateConfirmation = asyncHandler(async (req: Request, res: Respons
         }
 
         values.push(id);
-        const query = `UPDATE confirmation SET ${fieldsToUpdate.join(", ")} WHERE confirmation_id = $${index}`;
+        const query = `UPDATE confirmation SET ${fieldsToUpdate.join(", ")} WHERE confirmation_id = ?`;
 
         const [confirmationResult] = await pool.query(query, values) as any[];
 

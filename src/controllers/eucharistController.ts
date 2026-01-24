@@ -100,15 +100,15 @@ export const updateEucharist = asyncHandler(async (req: Request, res: Response) 
         let index = 1;
 
         if (eucharist_place) {
-            fieldsToUpdate.push(`eucharist_place = $${index++}`);
+            fieldsToUpdate.push(`eucharist_place = ?`);
             values.push(eucharist_place);
         }
         if (eucharist_date) {
-            fieldsToUpdate.push(`eucharist_date = $${index++}`);
+            fieldsToUpdate.push(`eucharist_date = ?`);
             values.push(eucharist_date);
         }
         if (user_id) {
-            fieldsToUpdate.push(`user_id = $${index++}`);
+            fieldsToUpdate.push(`user_id = ?`);
             values.push(user_id);
         }
 
@@ -118,7 +118,7 @@ export const updateEucharist = asyncHandler(async (req: Request, res: Response) 
         }
 
         values.push(id);
-        const query = `UPDATE eucharist SET ${fieldsToUpdate.join(", ")} WHERE eucharist_id = $${index}`;
+        const query = `UPDATE eucharist SET ${fieldsToUpdate.join(", ")} WHERE eucharist_id = ?`;
 
         const [eucharistResult] = await pool.query(query, values);
 

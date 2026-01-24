@@ -149,47 +149,47 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         let index = 1;
 
         if (certificate_number) {
-            fieldsToUpdate.push(`certificate_number = $${index++}`);
+            fieldsToUpdate.push(`certificate_number = ?`);
             values.push(certificate_number);
         }
         if (submission_location) {
-            fieldsToUpdate.push(`submission_location = $${index++}`);
+            fieldsToUpdate.push(`submission_location = ?`);
             values.push(submission_location);
         }
         if (submission_sub_county) {
-            fieldsToUpdate.push(`submission_sub_county = $${index++}`);
+            fieldsToUpdate.push(`submission_sub_county = ?`);
             values.push(submission_sub_county);
         }
         if (submission_county) {
-            fieldsToUpdate.push(`submission_county = $${index++}`);
+            fieldsToUpdate.push(`submission_county = ?`);
             values.push(submission_county);
         }
         if (marriage_date) {
-            fieldsToUpdate.push(`marriage_date = $${index++}`);
+            fieldsToUpdate.push(`marriage_date = ?`);
             values.push(marriage_date);
         }
         if (marriage_entry_number) {
-            fieldsToUpdate.push(`marriage_entry_number = $${index++}`);
+            fieldsToUpdate.push(`marriage_entry_number = ?`);
             values.push(marriage_entry_number);
         }
         if (registrar_certification_number) {
-            fieldsToUpdate.push(`registrar_certification_number = $${index++}`);
+            fieldsToUpdate.push(`registrar_certification_number = ?`);
             values.push(registrar_certification_number);
         }
         if (special_license_number) {
-            fieldsToUpdate.push(`special_license_number = $${index++}`);
+            fieldsToUpdate.push(`special_license_number = ?`);
             values.push(special_license_number);
         }
         if (conducted_by) {
-            fieldsToUpdate.push(`conducted_by = $${index++}`);
+            fieldsToUpdate.push(`conducted_by = ?`);
             values.push(conducted_by);
         }
         if (private_parties_count) {
-            fieldsToUpdate.push(`private_parties_count = $${index++}`);
+            fieldsToUpdate.push(`private_parties_count = ?`);
             values.push(private_parties_count);
         }
         if (private_parties_names) {
-            fieldsToUpdate.push(`private_parties_names = $${index++}`);
+            fieldsToUpdate.push(`private_parties_names = ?`);
             values.push(private_parties_names);
         }
 
@@ -202,7 +202,7 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
 
         values.push(id);
-        const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = $${index}`;
+        const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = ?`;
 
         const [result] = await pool.query(query, values);
 

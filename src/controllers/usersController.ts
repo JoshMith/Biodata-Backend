@@ -169,51 +169,51 @@ export const updateUser = asyncHandler(async (req, res) => {
             values.push(registration_number);
         }
         if (first_name) {
-            fieldsToUpdate.push(`first_name=?`);
+            fieldsToUpdate.push(`first_name= ?`);
             values.push(first_name);
         }
         if (last_name) {
-            fieldsToUpdate.push(`last_name=?`);
+            fieldsToUpdate.push(`last_name= ?`);
             values.push(last_name);
         }
         if (middle_name) {
-            fieldsToUpdate.push(`middle_name=?`);
+            fieldsToUpdate.push(`middle_name= ?`);
             values.push(middle_name);
         }
         if (mother) {
-            fieldsToUpdate.push(`mother=?`);
+            fieldsToUpdate.push(`mother= ?`);
             values.push(mother);
         }
         if (father) {
-            fieldsToUpdate.push(`father=?`);
+            fieldsToUpdate.push(`father= ?`);
             values.push(father);
         }
         if (birth_place) {
-            fieldsToUpdate.push(`birth_place=?`);
+            fieldsToUpdate.push(`birth_place= ?`);
             values.push(birth_place);
         }
         if (subcounty) {
-            fieldsToUpdate.push(`subcounty=?`);
+            fieldsToUpdate.push(`subcounty= ?`);
             values.push(subcounty);
         }
         if (birth_date) {
-            fieldsToUpdate.push(`birth_date=?`);
+            fieldsToUpdate.push(`birth_date= ?`);
             values.push(birth_date);
         }
         if (tribe) {
-            fieldsToUpdate.push(`tribe=?`);
+            fieldsToUpdate.push(`tribe= ?`);
             values.push(tribe);
         }
         if (clan) {
-            fieldsToUpdate.push(`clan=?`);
+            fieldsToUpdate.push(`clan= ?`);
             values.push(clan);
         }
         if (residence) {
-            fieldsToUpdate.push(`residence=?`);
+            fieldsToUpdate.push(`residence= ?`);
             values.push(residence);
         }
         if (parish_id) {
-            fieldsToUpdate.push(`parish_id=?`);
+            fieldsToUpdate.push(`parish_id= ?`);
             values.push(parish_id);
         }
 
