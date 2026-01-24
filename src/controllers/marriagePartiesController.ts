@@ -28,7 +28,7 @@ export const createMarriageParty = asyncHandler(async (req: Request, res: Respon
             residence_county, residence_sub_county, occupation, father_name, father_occupation,
             father_residence, mother_name, mother_occupation, mother_residence
         ) VALUES (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )`,
         [
             marriage_id, party_type, full_name, age, marital_status, residence_address,
