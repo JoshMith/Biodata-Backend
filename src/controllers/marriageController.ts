@@ -19,30 +19,45 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
         private_parties_names,
     } = req.body;
 
-    const result = await pool.query(
-        `INSERT INTO marriages (
-            user_id, certificate_number, submission_location, submission_sub_county, submission_county,
-            marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
-            conducted_by, private_parties_count, private_parties_names
-        ) VALUES (
-            ?,?,?,?,?,?,?,?,?,?,?,?
-        )`,
-        [
-            user_id,
-            certificate_number,
-            submission_location,
-            submission_sub_county,
-            submission_county,
-            marriage_date,
-            marriage_entry_number,
-            registrar_certification_number,
-            special_license_number,
-            conducted_by,
-            private_parties_count,
-            private_parties_names,
-        ]
-    );
-    res.status(201).json(result as any[]);
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO marriages (
+                user_id, certificate_number, submission_location, submission_sub_county, submission_county,
+                marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
+                conducted_by, private_parties_count, private_parties_names
+            ) VALUES (
+                ?,?,?,?,?,?,?,?,?,?,?,?
+            )`,
+            [
+                user_id,
+                certificate_number,
+                submission_location,
+                submission_sub_county,
+                submission_county,
+                marriage_date,
+                marriage_entry_number,
+                registrar_certification_number,
+                special_license_number,
+                conducted_by,
+                private_parties_count,
+                private_parties_names,
+            ]
+        );
+
+        // Return the inserted ID
+        res.status(201).json({ 
+            message: 'Marriage created successfully',
+            marriage_id: (result as any).insertId 
+        });
+    } catch (error: any) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            res.status(409).json({ 
+                message: 'A marriage record with this certificate number already exists' 
+            });
+            return;
+        }
+        throw error;
+    }
 });
 
 // READ all marriage records
@@ -61,7 +76,7 @@ export const getUserMarriages = asyncHandler(async (req: Request, res: Response)
     res.json(result as any[]);
 });
 
-// Add this new function to your marriages2Controller.ts
+// Get full marriage details with parties and documents
 export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
     const { user_id } = req.params;
     
@@ -127,7 +142,7 @@ export const getMarriageById = asyncHandler(async (req: Request, res: Response) 
     res.json((result as any[])[0]);
 });
 
-// UPDATE a marriage record with file upload support
+// UPDATE a marriage record
 export const updateMarriage = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -147,49 +162,48 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 
         const fieldsToUpdate: string[] = [];
         const values: any[] = [];
-        let index = 1;
 
-        if (certificate_number) {
+        if (certificate_number !== undefined) {
             fieldsToUpdate.push(`certificate_number = ?`);
             values.push(certificate_number);
         }
-        if (submission_location) {
+        if (submission_location !== undefined) {
             fieldsToUpdate.push(`submission_location = ?`);
             values.push(submission_location);
         }
-        if (submission_sub_county) {
+        if (submission_sub_county !== undefined) {
             fieldsToUpdate.push(`submission_sub_county = ?`);
             values.push(submission_sub_county);
         }
-        if (submission_county) {
+        if (submission_county !== undefined) {
             fieldsToUpdate.push(`submission_county = ?`);
             values.push(submission_county);
         }
-        if (marriage_date) {
+        if (marriage_date !== undefined) {
             fieldsToUpdate.push(`marriage_date = ?`);
             values.push(marriage_date);
         }
-        if (marriage_entry_number) {
+        if (marriage_entry_number !== undefined) {
             fieldsToUpdate.push(`marriage_entry_number = ?`);
             values.push(marriage_entry_number);
         }
-        if (registrar_certification_number) {
+        if (registrar_certification_number !== undefined) {
             fieldsToUpdate.push(`registrar_certification_number = ?`);
             values.push(registrar_certification_number);
         }
-        if (special_license_number) {
+        if (special_license_number !== undefined) {
             fieldsToUpdate.push(`special_license_number = ?`);
             values.push(special_license_number);
         }
-        if (conducted_by) {
+        if (conducted_by !== undefined) {
             fieldsToUpdate.push(`conducted_by = ?`);
             values.push(conducted_by);
         }
-        if (private_parties_count) {
+        if (private_parties_count !== undefined) {
             fieldsToUpdate.push(`private_parties_count = ?`);
             values.push(private_parties_count);
         }
-        if (private_parties_names) {
+        if (private_parties_names !== undefined) {
             fieldsToUpdate.push(`private_parties_names = ?`);
             values.push(private_parties_names);
         }
@@ -207,13 +221,13 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 
         const [result] = await pool.query(query, values);
 
-        if ((result as any[]).length === 0) {
+        if ((result as any).affectedRows === 0) {
             return res.status(404).json({ error: 'Marriage record not found' });
         }
 
         res.json({
             message: "Marriage record updated successfully",
-            marriage: (result as any[])[0]
+            marriage_id: id
         });
 
     } catch (error) {
@@ -226,7 +240,7 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
 export const deleteMarriage = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const [result] = await pool.query('DELETE FROM marriages WHERE marriage_id = ?', [id]);
-    if ((result as any[]).length === 0) {
+    if ((result as any).affectedRows === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
     res.json({ message: 'Marriage record deleted successfully' });
