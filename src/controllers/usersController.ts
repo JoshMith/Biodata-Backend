@@ -4,13 +4,14 @@ import asyncHandler from "../middlewares/asyncHandler"
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import { sendVerificationEmail } from "../utils/helpers/sendMail";
+import { generateRegistrationNumber } from "../utils/helpers/generateRegNum"
 
 
 // Add a new user
 export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
-            email, password, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+            email, password, phone_number, first_name, last_name, middle_name, mother, father,
             birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
         } = req.body;
 
@@ -28,32 +29,39 @@ export const addUser = asyncHandler(async (req, res) => {
         // Insert the new user
         const [newUser] = await pool.query(
             `INSERT INTO users (
-                email, password_hash, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father, 
+                email, password_hash, role, phone_number, first_name, last_name, middle_name, mother, father, 
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )`,
             [
-                email, hashedPassword, "member", phone_number, registration_number, first_name, last_name, middle_name, mother, father,
+                email, hashedPassword, "member", phone_number, first_name, last_name, middle_name, mother, father,
                 birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
             ]
         );
 
-        const user = (newUser as any[])[0];
+        const insertResult = newUser as any;
+        const userId = insertResult.insertId;
+
+        // Generate registration number
+        const registration_number = await generateRegistrationNumber(userId);
+
+        // Update the user with registration number
+        await pool.query("UPDATE users SET registration_number = ? WHERE id = ?", [registration_number, userId]);
 
         //generate verification token
-        const emailToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+        const emailToken = jwt.sign({ userId: userId }, process.env.JWT_SECRET!, { expiresIn: "1h" });
 
         //send verification email
-        await sendVerificationEmail(user.email, emailToken)
+        // await sendVerificationEmail(email, emailToken)
 
         // Generate the JWT token (custom function for token generation)
-        // await generateToken(res, user.id, user.role);
+        // await generateToken(res, userId, "member");
 
 
         res.status(201).json({
             message: "User successfully added",
-            user: (newUser as any[])[0],
+            user: { id: userId, email },
         });
     } catch (error) {
         console.error("Error adding user:", error);
