@@ -5,6 +5,7 @@ import { generateToken } from "../utils/helpers/generateToken";
 import asyncHandler from "../middlewares/asyncHandler";
 import jwt from "jsonwebtoken";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../utils/helpers/sendMail";
+import { generateRegistrationNumber } from "../utils/helpers/generateRegNum";
 
 export const registerUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -84,6 +85,12 @@ export const registerUser = asyncHandler(
         const parishArray = parishRows as any[];
         parishName = parishArray[0]?.parish_name || null;
       }
+
+      // Generate registration number
+        const registration_number = await generateRegistrationNumber(user.id);
+
+        // Update the user with registration number
+        await pool.query("UPDATE users SET registration_number = ? WHERE id = ?", [registration_number, user.id]);
 
       // Generate verification token
       const emailToken = jwt.sign(

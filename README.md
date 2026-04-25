@@ -26,8 +26,8 @@ Ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/christiandata.git
-   cd christiandata
+   git clone https://github.com/JoshMith/Biodata-Backend.git
+   cd Biodata-Backend
 ````
 
 2. **Install dependencies**
@@ -58,7 +58,7 @@ Ensure you have the following installed:
    Run migrations or create tables manually depending on your schema:
 
    ```bash
-   psql -U username -d christiandb -f schema.sql
+   psql -U localhost -d christian_bio_data -f database.sql
    ```
 
    *(If you are using Sequelize/Prisma/Knex, replace with the appropriate migration command.)*
