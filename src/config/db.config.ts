@@ -1,9 +1,14 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from "path";
 
-// Create connection pool
+dotenv.config({
+  path: path.resolve(__dirname, "../../.env")
+});
+
+const isProduction = process.env.NODE_ENV === "production";
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,           // Should be 'db.cbms.adnyeri.org'
   port: Number(process.env.DB_PORT) || 3306, // MySQL default port is 3306
@@ -29,4 +34,3 @@ pool.getConnection()
   });
 
 export default pool;
-
