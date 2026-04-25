@@ -7,6 +7,7 @@ dotenv.config({
   path: path.resolve(__dirname, "../../.env")
 });
 
+
 const isProduction = process.env.NODE_ENV === "production";
 
 const pool = mysql.createPool({
