@@ -12,7 +12,7 @@ export const addUser = asyncHandler(async (req, res) => {
     try {
         const {
             email, password, phone_number, first_name, last_name, middle_name, mother, father,
-            birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
+            birth_place, subcounty, birth_date, tribe, clan, domicile, parish_id
         } = req.body;
 
         // Check if email already exists
@@ -30,13 +30,13 @@ export const addUser = asyncHandler(async (req, res) => {
         const [newUser] = await pool.query(
             `INSERT INTO users (
                 email, password_hash, role, phone_number, first_name, last_name, middle_name, mother, father, 
-                birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
+                birth_place, subcounty, birth_date, tribe, clan, domicile, parish_id
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )`,
             [
                 email, hashedPassword, "member", phone_number, first_name, last_name, middle_name, mother, father,
-                birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
+                birth_place, subcounty, birth_date, tribe, clan, domicile, parish_id
             ]
         );
 
@@ -140,7 +140,7 @@ export const updateUser = asyncHandler(async (req, res) => {
         const { id } = req.params;
         const {
             email, password, role, phone_number, registration_number, first_name, last_name, middle_name, mother, father,
-            birth_place, subcounty, birth_date, tribe, clan, residence, parish_id
+            birth_place, subcounty, birth_date, tribe, clan, domicile, parish_id
         } = req.body;
 
         // Check if user exists
@@ -216,9 +216,9 @@ export const updateUser = asyncHandler(async (req, res) => {
             fieldsToUpdate.push(`clan= ?`);
             values.push(clan);
         }
-        if (residence) {
-            fieldsToUpdate.push(`residence= ?`);
-            values.push(residence);
+        if (domicile) {
+            fieldsToUpdate.push(`domicile= ?`);
+            values.push(domicile);
         }
         if (parish_id) {
             fieldsToUpdate.push(`parish_id= ?`);

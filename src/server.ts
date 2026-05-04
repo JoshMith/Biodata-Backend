@@ -9,7 +9,6 @@ import baptismRoutes from "./routes/baptismRoutes"
 import eucharistRoutes from "./routes/eucharistRoutes"
 import confirmRoutes from "./routes/confirmRoutes"
 import parishRoutes from "./routes/parishRoutes"
-import marriageDocumentRoutes from "./routes/marriageDocumentRoutes"
 import marriagePartiesRoutes from "./routes/marriagePartiesRoutes"
 import marriageRoutes from "./routes/marriageRoutes"
 import path from "path"
@@ -38,7 +37,7 @@ app.use(cors({
     methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     credentials: true, // allows cookies and auth headers
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With'],
-  exposedHeaders: ['Set-Cookie']
+    exposedHeaders: ['Set-Cookie']
 }))
 
 app.set('trust proxy', true); // trust first proxy if behind a proxy (e.g., Heroku, Nginx)
@@ -52,16 +51,15 @@ app.use("/baptism", baptismRoutes)
 app.use("/eucharist", eucharistRoutes)
 app.use("/confirmation", confirmRoutes)
 app.use("/marriages", marriageRoutes)
-app.use("/marriage-documents", marriageDocumentRoutes)
 app.use("/marriage-parties", marriagePartiesRoutes)
 app.use("/parish", parishRoutes)
 app.use('/marriage-documents/download', express.static(
-    path.join(__dirname, 'uploads', 'marriage_documents'), 
+    path.join(__dirname, 'uploads', 'marriage_documents'),
     {
         setHeaders: (res, filePath) => {
             const filename = path.basename(filePath);
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-            
+
             const ext = path.extname(filename).toLowerCase();
             const contentType = {
                 '.pdf': 'application/pdf',
@@ -71,7 +69,7 @@ app.use('/marriage-documents/download', express.static(
                 '.doc': 'application/msword',
                 '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             }[ext] || 'application/octet-stream';
-            
+
             res.setHeader('Content-Type', contentType);
         }
     }
@@ -154,9 +152,15 @@ app.use(notFound)
 // start the server
 const port = process.env.PORT || 5000
 app.listen(port, () => {
-    console.log(`🚀🚀Server is running on port: ${port}`)
-    console.log('Link to access the server: https://cbms.adnyeri.org/api/')
-    console.log(`Version: 1.0.12`)
-    console.log(`Server time: ${new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" })}`)
-    console.log(`Environment: ${process.env.NODE_ENV}`)
+    console.log(`
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║                                                               ║
+    ║          🚀 CBMS BACKEND API SERVER ACTIVATED! 🚀             ║
+    ║                                                               ║
+    ║  ✨ Running on port: ${port} ... Version: 2.0                    ║
+    ║  🌐 API Link: https://cbms.adnyeri.org/api/                   ║
+    ║  💪 Server time: ${new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" })}                         ║
+    ║                                                               ║
+    ╚═══════════════════════════════════════════════════════════════╝
+  `);
 })

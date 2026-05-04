@@ -6,53 +6,54 @@ import pool from '../config/db.config';
 export const createMarriage = asyncHandler(async (req: Request, res: Response) => {
     const {
         user_id,
-        certificate_number,
+        civil_marriage_certificate_number,
         submission_location,
         submission_sub_county,
         submission_county,
         marriage_date,
-        marriage_entry_number,
-        registrar_certification_number,
-        special_license_number,
         conducted_by,
-        private_parties_count,
-        private_parties_names,
+        witness1_name,
+        witness1_son_of,
+        witness1_clan,
+        witness2_name,
+        witness2_son_of,
+        witness2_clan
     } = req.body;
 
     try {
         const [result] = await pool.query(
             `INSERT INTO marriages (
-                user_id, certificate_number, submission_location, submission_sub_county, submission_county,
-                marriage_date, marriage_entry_number, registrar_certification_number, special_license_number,
-                conducted_by, private_parties_count, private_parties_names
+                user_id, civil_marriage_certificate_number, submission_location, submission_sub_county, submission_county,
+                marriage_date, conducted_by, witness1_name, witness1_son_of, witness1_clan, witness2_name, witness2_son_of, witness2_clan
             ) VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?
             )`,
             [
                 user_id,
-                certificate_number,
+                civil_marriage_certificate_number,
                 submission_location,
                 submission_sub_county,
                 submission_county,
                 marriage_date,
-                marriage_entry_number,
-                registrar_certification_number,
-                special_license_number,
                 conducted_by,
-                private_parties_count,
-                private_parties_names,
+                witness1_name,
+                witness1_son_of,
+                witness1_clan,
+                witness2_name,
+                witness2_son_of,
+                witness2_clan
             ]
         );
 
         // Return the inserted ID
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Marriage created successfully',
-            marriage_id: (result as any).insertId 
+            marriage_id: (result as any).insertId
         });
     } catch (error: any) {
         if (error.code === 'ER_DUP_ENTRY') {
-            res.status(409).json({ 
-                message: 'A marriage record with this certificate number already exists' 
+            res.status(409).json({
+                message: 'A marriage record with this certificate number already exists'
             });
             return;
         }
@@ -79,7 +80,7 @@ export const getUserMarriages = asyncHandler(async (req: Request, res: Response)
 // Get full marriage details with parties and documents
 export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
     const { user_id } = req.params;
-    
+
     const query = `
         SELECT 
             m.*,
@@ -88,32 +89,12 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
                     'party_id', mp.party_id,
                     'party_type', mp.party_type,
                     'full_name', mp.full_name,
-                    'age', mp.age,
                     'marital_status', mp.marital_status,
-                    'residence_address', mp.residence_address,
-                    'residence_county', mp.residence_county,
-                    'residence_sub_county', mp.residence_sub_county,
-                    'occupation', mp.occupation,
+                    'domicile', mp.domicile,
                     'father_name', mp.father_name,
-                    'father_occupation', mp.father_occupation,
-                    'father_residence', mp.father_residence,
-                    'mother_name', mp.mother_name,
-                    'mother_occupation', mp.mother_occupation,
-                    'mother_residence', mp.mother_residence
+                    'mother_name', mp.mother_name
                 )
-            ) AS parties,
-            (SELECT JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'document_id', md2.document_id,
-                    'document_type', md2.document_type,
-                    'file_name', md2.file_name,
-                    'file_path', md2.file_path,
-                    'file_size', md2.file_size,
-                    'uploaded_at', md2.uploaded_at
-                )
-            )
-            FROM marriage_documents md2
-            WHERE md2.marriage_id = m.marriage_id) AS documents
+            ) AS parties
         FROM marriages m
         LEFT JOIN marriage_parties mp ON m.marriage_id = mp.marriage_id
         WHERE m.user_id = ?
@@ -122,13 +103,13 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
     `;
 
     const [result] = await pool.query(query, [user_id]);
-    
+
     if ((result as any[]).length === 0) {
-        return res.status(404).json({ 
-            error: 'No marriage records found for this user' 
+        return res.status(404).json({
+            error: 'No marriage records found for this user'
         });
     }
-    
+
     res.json(result as any[]);
 });
 
@@ -147,25 +128,26 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
     try {
         const { id } = req.params;
         const {
-            certificate_number,
+            civil_marriage_certificate_number,
             submission_location,
             submission_sub_county,
             submission_county,
             marriage_date,
-            marriage_entry_number,
-            registrar_certification_number,
-            special_license_number,
             conducted_by,
-            private_parties_count,
-            private_parties_names,
+            witness1_name,
+            witness1_son_of,
+            witness1_clan,
+            witness2_name,
+            witness2_son_of,
+            witness2_clan
         } = req.body;
 
         const fieldsToUpdate: string[] = [];
         const values: any[] = [];
 
-        if (certificate_number !== undefined) {
+        if (civil_marriage_certificate_number !== undefined) {
             fieldsToUpdate.push(`certificate_number = ?`);
-            values.push(certificate_number);
+            values.push(civil_marriage_certificate_number);
         }
         if (submission_location !== undefined) {
             fieldsToUpdate.push(`submission_location = ?`);
@@ -183,31 +165,34 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
             fieldsToUpdate.push(`marriage_date = ?`);
             values.push(marriage_date);
         }
-        if (marriage_entry_number !== undefined) {
-            fieldsToUpdate.push(`marriage_entry_number = ?`);
-            values.push(marriage_entry_number);
-        }
-        if (registrar_certification_number !== undefined) {
-            fieldsToUpdate.push(`registrar_certification_number = ?`);
-            values.push(registrar_certification_number);
-        }
-        if (special_license_number !== undefined) {
-            fieldsToUpdate.push(`special_license_number = ?`);
-            values.push(special_license_number);
-        }
         if (conducted_by !== undefined) {
             fieldsToUpdate.push(`conducted_by = ?`);
             values.push(conducted_by);
         }
-        if (private_parties_count !== undefined) {
-            fieldsToUpdate.push(`private_parties_count = ?`);
-            values.push(private_parties_count);
+        if (witness1_name !== undefined) {
+            fieldsToUpdate.push(`witness1_name = ?`);
+            values.push(witness1_name);
         }
-        if (private_parties_names !== undefined) {
-            fieldsToUpdate.push(`private_parties_names = ?`);
-            values.push(private_parties_names);
+        if (witness1_son_of !== undefined) {
+            fieldsToUpdate.push(`witness1_son_of = ?`);
+            values.push(witness1_son_of);
         }
-
+        if (witness1_clan !== undefined) {
+            fieldsToUpdate.push(`witness1_clan = ?`);
+            values.push(witness1_clan);
+        }
+        if (witness2_name !== undefined) {
+            fieldsToUpdate.push(`witness2_name = ?`);
+            values.push(witness2_name);
+        }
+        if (witness2_son_of !== undefined) {
+            fieldsToUpdate.push(`witness2_son_of = ?`);
+            values.push(witness2_son_of);
+        }
+        if (witness2_clan !== undefined) {
+            fieldsToUpdate.push(`witness2_clan = ?`);
+            values.push(witness2_clan);
+        }
         if (fieldsToUpdate.length === 0) {
             res.status(400).json({ message: "No fields provided for update" });
             return;

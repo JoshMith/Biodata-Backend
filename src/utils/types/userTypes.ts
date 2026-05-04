@@ -20,7 +20,7 @@ export interface User {
     birth_place: string;
     birth_date: string;
     sub_county: string;
-    residence: string;
+    domicile: string;
 }
 
 /**

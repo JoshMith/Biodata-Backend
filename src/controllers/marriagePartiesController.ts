@@ -8,32 +8,20 @@ export const createMarriageParty = asyncHandler(async (req: Request, res: Respon
         marriage_id,
         party_type,
         full_name,
-        age,
         marital_status,
-        residence_address,
-        residence_county,
-        residence_sub_county,
-        occupation,
+        domicile,
         father_name,
-        father_occupation,
-        father_residence,
-        mother_name,
-        mother_occupation,
-        mother_residence,
+        mother_name
     } = req.body;
 
     const [result] = await pool.query(
         `INSERT INTO marriage_parties (
-            marriage_id, party_type, full_name, age, marital_status, residence_address,
-            residence_county, residence_sub_county, occupation, father_name, father_occupation,
-            father_residence, mother_name, mother_occupation, mother_residence
+            marriage_id, party_type, full_name, marital_status, domicile, father_name, mother_name
         ) VALUES (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?
         )`,
         [
-            marriage_id, party_type, full_name, age, marital_status, residence_address,
-            residence_county, residence_sub_county, occupation, father_name, father_occupation,
-            father_residence, mother_name, mother_occupation, mother_residence
+            marriage_id, party_type, full_name, marital_status, domicile, father_name, mother_name
         ]
     );
     res.status(201).json(result);
@@ -67,18 +55,10 @@ export const updateMarriageParty = asyncHandler(async (req: Request, res: Respon
         marriage_id: req.body.marriage_id,
         party_type: req.body.party_type,
         full_name: req.body.full_name,
-        age: req.body.age,
         marital_status: req.body.marital_status,
-        residence_address: req.body.residence_address,
-        residence_county: req.body.residence_county,
-        residence_sub_county: req.body.residence_sub_county,
-        occupation: req.body.occupation,
+        domicile: req.body.domicile,
         father_name: req.body.father_name,
-        father_occupation: req.body.father_occupation,
-        father_residence: req.body.father_residence,
-        mother_name: req.body.mother_name,
-        mother_occupation: req.body.mother_occupation,
-        mother_residence: req.body.mother_residence
+        mother_name: req.body.mother_name
     };
 
     Object.entries(possibleFields).forEach(([key, value]) => {
