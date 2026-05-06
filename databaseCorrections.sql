@@ -53,7 +53,7 @@ INSERT INTO parishes (parish_name, deanery) VALUES
 
 UPDATE parishes
 SET parish_name = 'Ithenguri Parish'
-WHERE parish_name = 'Itheguri Parish',
+WHERE parish_name = 'Itheguri Parish';
 
 UPDATE parishes
 SET parish_name = 'St. Teresa Equator Parish'
