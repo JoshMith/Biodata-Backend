@@ -23,11 +23,12 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
     try {
         const [result] = await pool.query(
             `INSERT INTO marriages (
-                user_id, civil_marriage_certificate_number, submission_location, submission_sub_county, submission_county,
-                marriage_date, conducted_by, witness1_name, witness1_son_of, witness1_clan, witness2_name, witness2_son_of, witness2_clan
-            ) VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?
-            )`,
+                user_id, civil_marriage_certificate_number,
+                submission_location, submission_sub_county, submission_county,
+                marriage_date, conducted_by,
+                witness1_name, witness1_son_of, witness1_clan,
+                witness2_name, witness2_son_of, witness2_clan
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [
                 user_id,
                 civil_marriage_certificate_number,
@@ -45,7 +46,6 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
             ]
         );
 
-        // Return the inserted ID
         res.status(201).json({
             message: 'Marriage created successfully',
             marriage_id: (result as any).insertId
@@ -77,40 +77,36 @@ export const getUserMarriages = asyncHandler(async (req: Request, res: Response)
     res.json(result as any[]);
 });
 
-// Get full marriage details with parties and documents
+// Get full marriage details with parties — compatible with MySQL < 5.7.22
 export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
-    const query = `
-        SELECT 
-            m.*,
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'party_id', mp.party_id,
-                    'party_type', mp.party_type,
-                    'full_name', mp.full_name,
-                    'marital_status', mp.marital_status,
-                    'domicile', mp.domicile,
-                    'father_name', mp.father_name,
-                    'mother_name', mp.mother_name
-                )
-            ) AS parties
-        FROM marriages m
-        LEFT JOIN marriage_parties mp ON m.marriage_id = mp.marriage_id
-        WHERE m.user_id = ?
-        GROUP BY m.marriage_id
-        ORDER BY m.marriage_date DESC
-    `;
+    // Step 1: Get the marriage record
+    const [marriages] = await pool.query(
+        `SELECT * FROM marriages WHERE user_id = ? ORDER BY marriage_date DESC`,
+        [user_id]
+    ) as any[];
 
-    const [result] = await pool.query(query, [user_id]);
-
-    if ((result as any[]).length === 0) {
-        return res.status(404).json({
-            error: 'No marriage records found for this user'
-        });
+    if (!marriages || (marriages as any[]).length === 0) {
+        return res.status(404).json({ error: 'No marriage records found for this user' });
     }
 
-    res.json(result as any[]);
+    // Step 2: For each marriage, fetch its parties
+    const results = await Promise.all(
+        (marriages as any[]).map(async (marriage: any) => {
+            const [parties] = await pool.query(
+                `SELECT * FROM marriage_parties WHERE marriage_id = ?`,
+                [marriage.marriage_id]
+            ) as any[];
+
+            return {
+                ...marriage,
+                parties: parties as any[]
+            };
+        })
+    );
+
+    res.json(results);
 });
 
 // READ a single marriage record by ID
@@ -123,7 +119,7 @@ export const getMarriageById = asyncHandler(async (req: Request, res: Response) 
     res.json((result as any[])[0]);
 });
 
-// UPDATE a marriage record
+// UPDATE a marriage record — uses only columns that still exist after databaseCorrections.sql
 export const updateMarriage = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -145,79 +141,50 @@ export const updateMarriage = asyncHandler(async (req: Request, res: Response) =
         const fieldsToUpdate: string[] = [];
         const values: any[] = [];
 
-        if (civil_marriage_certificate_number !== undefined) {
-            fieldsToUpdate.push(`certificate_number = ?`);
-            values.push(civil_marriage_certificate_number);
+        const fieldMap: Record<string, any> = {
+            'civil_marriage_certificate_number': civil_marriage_certificate_number,
+            'submission_location': submission_location,
+            'submission_sub_county': submission_sub_county,
+            'submission_county': submission_county,
+            'marriage_date': marriage_date,
+            'conducted_by': conducted_by,
+            'witness1_name': witness1_name,
+            'witness1_son_of': witness1_son_of,
+            'witness1_clan': witness1_clan,
+            'witness2_name': witness2_name,
+            'witness2_son_of': witness2_son_of,
+            'witness2_clan': witness2_clan,
+        };
+
+        for (const [col, val] of Object.entries(fieldMap)) {
+            if (val !== undefined) {
+                fieldsToUpdate.push(`${col} = ?`);
+                values.push(val);
+            }
         }
-        if (submission_location !== undefined) {
-            fieldsToUpdate.push(`submission_location = ?`);
-            values.push(submission_location);
-        }
-        if (submission_sub_county !== undefined) {
-            fieldsToUpdate.push(`submission_sub_county = ?`);
-            values.push(submission_sub_county);
-        }
-        if (submission_county !== undefined) {
-            fieldsToUpdate.push(`submission_county = ?`);
-            values.push(submission_county);
-        }
-        if (marriage_date !== undefined) {
-            fieldsToUpdate.push(`marriage_date = ?`);
-            values.push(marriage_date);
-        }
-        if (conducted_by !== undefined) {
-            fieldsToUpdate.push(`conducted_by = ?`);
-            values.push(conducted_by);
-        }
-        if (witness1_name !== undefined) {
-            fieldsToUpdate.push(`witness1_name = ?`);
-            values.push(witness1_name);
-        }
-        if (witness1_son_of !== undefined) {
-            fieldsToUpdate.push(`witness1_son_of = ?`);
-            values.push(witness1_son_of);
-        }
-        if (witness1_clan !== undefined) {
-            fieldsToUpdate.push(`witness1_clan = ?`);
-            values.push(witness1_clan);
-        }
-        if (witness2_name !== undefined) {
-            fieldsToUpdate.push(`witness2_name = ?`);
-            values.push(witness2_name);
-        }
-        if (witness2_son_of !== undefined) {
-            fieldsToUpdate.push(`witness2_son_of = ?`);
-            values.push(witness2_son_of);
-        }
-        if (witness2_clan !== undefined) {
-            fieldsToUpdate.push(`witness2_clan = ?`);
-            values.push(witness2_clan);
-        }
+
         if (fieldsToUpdate.length === 0) {
-            res.status(400).json({ message: "No fields provided for update" });
+            res.status(400).json({ message: 'No fields provided for update' });
             return;
         }
 
-        // Always update updated_at
-        fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
-
+        fieldsToUpdate.push('updated_at = CURRENT_TIMESTAMP');
         values.push(id);
-        const query = `UPDATE marriages SET ${fieldsToUpdate.join(", ")} WHERE marriage_id = ?`;
 
-        const [result] = await pool.query(query, values);
+        const [result] = await pool.query(
+            `UPDATE marriages SET ${fieldsToUpdate.join(', ')} WHERE marriage_id = ?`,
+            values
+        );
 
         if ((result as any).affectedRows === 0) {
             return res.status(404).json({ error: 'Marriage record not found' });
         }
 
-        res.json({
-            message: "Marriage record updated successfully",
-            marriage_id: id
-        });
+        res.json({ message: 'Marriage record updated successfully', marriage_id: id });
 
     } catch (error) {
-        console.error("Error updating marriage record:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error('Error updating marriage record:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
