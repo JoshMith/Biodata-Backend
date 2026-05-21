@@ -16,12 +16,14 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,           // Should be 'cdbms_user'
   password: process.env.DB_PASSWORD,   // Your actual MySQL password
   database: process.env.DB_NAME,       // Should be 'christian_bio_data'
-    // Add these Dreamhost-specific options:
-  ssl: {
-    rejectUnauthorized: false
-  },
-  connectTimeout: 10000, // Increase timeout
-  charset: 'utf8mb4'
+  connectTimeout: isProduction ? 10000 : undefined,
+  charset: 'utf8mb4',
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? {
+        rejectUnauthorized: false, // Required for Production
+      }
+      : undefined,
 });
 
 // Test connection
