@@ -17,14 +17,17 @@ export const addUser = asyncHandler(async (req, res) => {
 
         // Check if email already exists
         const [emailCheck] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-        if ((emailCheck as any[]).length > 0) {
+        if ((emailCheck as any[]).length > 0 && email !== "") {
             res.status(400).json({ message: "Email already in use" });
             return;
         }
-
-        // Hash the password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // Prepare hashed password (null if no email/password provided)
+        let hashedPassword: string | null = null;
+        if (email !== "") {
+            // Hash the password
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(password, salt);
+        }
 
         // Insert the new user
         const [newUser] = await pool.query(

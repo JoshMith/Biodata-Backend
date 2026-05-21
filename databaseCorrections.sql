@@ -3,6 +3,9 @@ ALTER TABLE users
 MODIFY email VARCHAR(100) NULL;
 
 ALTER TABLE users
+DROP INDEX users_email_key;
+
+ALTER TABLE users
 CHANGE residence domicile VARCHAR(150);
 
 ALTER TABLE marriages 
