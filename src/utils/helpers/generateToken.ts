@@ -2,7 +2,7 @@ import { Response } from "express";
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 
-dotenv.config()
+dotenv.config();
 
 export const generateToken = (res: Response, userId: string, role: string) => {
     const jwtSecret = process.env.JWT_SECRET;

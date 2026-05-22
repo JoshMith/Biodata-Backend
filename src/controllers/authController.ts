@@ -6,6 +6,9 @@ import asyncHandler from "../middlewares/asyncHandler";
 import jwt from "jsonwebtoken";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../utils/helpers/sendMail";
 import { generateRegistrationNumber } from "../utils/helpers/generateRegNum";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const registerUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -19,8 +22,6 @@ export const registerUser = asyncHandler(
         phone_number,
         parish_id,
       } = req.body;
-
-      console.log("Attempting to register:", email); // Debug log
 
       // ✅ FIXED: Use ? for MySQL
       const [userExistsRows] = await pool.query(
@@ -87,10 +88,10 @@ export const registerUser = asyncHandler(
       }
 
       // Generate registration number
-        const registration_number = await generateRegistrationNumber(user.id);
+      const registration_number = await generateRegistrationNumber(user.id);
 
-        // Update the user with registration number
-        await pool.query("UPDATE users SET registration_number = ? WHERE id = ?", [registration_number, user.id]);
+      // Update the user with registration number
+      await pool.query("UPDATE users SET registration_number = ? WHERE id = ?", [registration_number, user.id]);
 
       // Generate verification token
       const emailToken = jwt.sign(
@@ -99,12 +100,15 @@ export const registerUser = asyncHandler(
         { expiresIn: "1h" },
       );
 
+      console.log("User registered successfully:", email); // Debug log
+
       // Send verification email (don't await if you want to continue)
       sendVerificationEmail(user.email, emailToken).catch((err) => {
         console.error("Email sending failed:", err);
       });
 
-      // Generate JWT token
+
+      // Generate the JWT token
       await generateToken(res, user.id, user.role);
 
       res.status(201).json({
@@ -259,18 +263,18 @@ export const logoutUser = asyncHandler(
     // Clear access and refresh tokens for this specific user
     res.clearCookie("access_token", {
       httpOnly: true,
-      secure: true, 
-      sameSite: "none", 
-      path: "/", 
-      domain: ".cbms.adnyeri.org", 
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      domain: ".cbms.adnyeri.org",
     });
 
     res.clearCookie("refresh_token", {
       httpOnly: true,
-      secure: true, 
-      sameSite: "none", 
-      path: "/", 
-      domain: ".cbms.adnyeri.org", 
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      domain: ".cbms.adnyeri.org",
     });
 
     res.status(200).json({ message: "User logged out successfully" });

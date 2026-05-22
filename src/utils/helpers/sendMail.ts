@@ -3,21 +3,21 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export const sendVerificationEmail = async (to: string, token: string) => {
+export const sendVerificationEmail = async (email: string, token: string) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || "587"),
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+      port: parseInt(process.env.EMAIL_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
   });
 
   const verificationLink = `${process.env.FRONTEND_URL}/verifyEmail?token=${encodeURIComponent(token)}`;
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to,
+    to: email,
     subject: "Welcome to CBMS Archdiocese of Nyeri - Email Verification",
     html: `
             <!DOCTYPE html>
@@ -87,7 +87,7 @@ export const sendVerificationEmail = async (to: string, token: string) => {
   };
   try {
     await transporter.sendMail(mailOptions);
-    console.log("Verification email sent successfully to:", to);
+    console.log("Verification email sent successfully to:", email);
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
     console.error("Error sending email:", error);
