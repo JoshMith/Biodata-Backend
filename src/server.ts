@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 app.use(cookieParser())
 
 
-const allowedOrigins = ['https://cbms.adnyeri.org', 'http://localhost:4200'];
+const allowedOrigins = ['https://cbms.adnyeri.org', 'http://localhost:4200', 'https://christian-biodata.vercel.app'];
 
 //CORS middleware
 app.use(cors({
@@ -151,6 +151,7 @@ app.use(notFound)
 
 // start the server
 const port = process.env.PORT || 5000
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
 app.listen(port, () => {
     console.log(`
     ╔═══════════════════════════════════════════════════════════════╗
@@ -158,7 +159,7 @@ app.listen(port, () => {
     ║          🚀 CBMS BACKEND API SERVER ACTIVATED! 🚀             ║
     ║                                                               ║
     ║  ✨ Running on port: ${port} ... Version: 2.0                    ║
-    ║  🌐 API Link: https://cbms.adnyeri.org/api/                   ║
+    ║  🌐 API Link: ${frontendUrl}                   ║
     ║  💪 Server time: ${new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" })}                         ║
     ║                                                               ║
     ╚═══════════════════════════════════════════════════════════════╝
