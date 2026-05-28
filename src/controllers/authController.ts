@@ -52,7 +52,7 @@ export const registerUser = asyncHandler(
           middle_name,
           email,
           hashedPassword,
-          "superuser",
+          "member",
           phone_number,
           parish_id,
         ],

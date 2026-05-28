@@ -20,7 +20,7 @@ export const generateToken = (res: Response, userId: string, role: string) => {
         const cookieOptions = {
             httpOnly: true,
             secure: true,
-            sameSite: "strict" as const,
+            sameSite: "none" as const,
             path: "/", // IMPORTANT: Set path to root so it's sent to /api too
             // domain: ".cbms.adnyeri.org", // IMPORTANT: Use dot prefix for subdomains
         };
