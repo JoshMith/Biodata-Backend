@@ -62,8 +62,23 @@ export const createMarriage = asyncHandler(async (req: Request, res: Response) =
 });
 
 // READ all marriage records
-export const getAllMarriages = asyncHandler(async (_req: Request, res: Response) => {
-    const [result] = await pool.query('SELECT * FROM marriages');
+export const getAllMarriages = asyncHandler(async (req: any, res: Response) => {
+    const role = req.user?.role;
+    const parishId = req.user?.parish_id;
+    const userId = req.user?.id;
+
+    let query = "SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id";
+    const params: any[] = [];
+
+    if (role === 'editor') {
+        query += " WHERE u.parish_id = ?";
+        params.push(parishId);
+    } else if (role === 'member') {
+        query += " WHERE m.user_id = ?";
+        params.push(userId);
+    }
+
+    const [result] = await pool.query(query, params);
     res.json(result as any[]);
 });
 

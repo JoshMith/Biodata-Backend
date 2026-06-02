@@ -39,12 +39,28 @@ export const createBaptism = asyncHandler(async (req: Request, res: Response) =>
 
 
 //Get All baptism
-export const getBaptism = asyncHandler(async (req: Request, res: Response) => {
+export const getBaptism = asyncHandler(async (req: any, res: Response) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM baptism ORDER BY baptism_id ASC ");
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT b.* FROM baptism b JOIN users u ON b.user_id = u.id";
+        const params: any[] = [];
+
+        if (role === 'editor') {
+            query += " WHERE u.parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            query += " WHERE b.user_id = ?";
+            params.push(userId);
+        }
+
+        query += " ORDER BY b.baptism_id ASC";
+        const [rows] = await pool.query(query, params);
         res.json(rows);
     } catch (error) {
-        console.error("Error getting baptism record:", error);
+        console.error("Error getting baptism records:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });

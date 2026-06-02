@@ -39,12 +39,28 @@ export const createConfirmation = asyncHandler(async (req: Request, res: Respons
 
 
 //Get All confirmation
-export const getConfirmation = asyncHandler(async (req: Request, res: Response) => {
+export const getConfirmation = asyncHandler(async (req: any, res: Response) => {
     try {
-        const [result] = await pool.query("SELECT * FROM confirmation ORDER BY confirmation_id ASC ");
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT c.* FROM confirmation c JOIN users u ON c.user_id = u.id";
+        const params: any[] = [];
+
+        if (role === 'editor') {
+            query += " WHERE u.parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            query += " WHERE c.user_id = ?";
+            params.push(userId);
+        }
+
+        query += " ORDER BY c.confirmation_id ASC";
+        const [result] = await pool.query(query, params);
         res.json(result as any[]);
     } catch (error) {
-        console.error("Error getting confirmation record:", error);
+        console.error("Error getting confirmation records:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });

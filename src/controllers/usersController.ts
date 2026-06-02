@@ -73,26 +73,52 @@ export const addUser = asyncHandler(async (req, res) => {
 });
 
 //Get All users 
-export const getUsers = asyncHandler(async (req, res) => {
+export const getUsers = asyncHandler(async (req: any, res) => {
     try {
-        const [result] = await pool.query("SELECT * FROM users ORDER BY id ASC ");
-        res.json((result as any[]));
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT * FROM users";
+        const params: any[] = [];
+
+        if (role === 'editor') {
+            query += " WHERE parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            query += " WHERE id = ?";
+            params.push(userId);
+        }
+
+        query += " ORDER BY id ASC";
+        const [result] = await pool.query(query, params);
+        res.json(result as any[]);
     } catch (error) {
-        console.error("Error creating user:", error);
+        console.error("Error fetching users:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-})
+});
 
-
-//Get total number of users 
-export const getUserCount = asyncHandler(async (_req: Request, res: Response) => {
+export const getUserCount = asyncHandler(async (req: any, res: Response) => {
     try {
-        const [result] = await pool.query(
-            "SELECT COUNT(*) AS usercount FROM users"
-        );
-        const userCount: number = parseInt((result as any[])[0].usercount, 10);
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT COUNT(*) AS usercount FROM users";
+        const params: any[] = [];
+
+        if (role === 'editor') {
+            query += " WHERE parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            query += " WHERE id = ?";
+            params.push(userId);
+        }
+
+        const [result] = await pool.query(query, params);
+        const userCount = parseInt((result as any[])[0].usercount, 10);
         res.json({ userCount });
-        // console.log("User count:", userCount);
     } catch (error) {
         console.error("Error fetching user count:", error);
         res.status(500).json({ message: "Internal server error" });

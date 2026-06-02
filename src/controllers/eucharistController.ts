@@ -40,12 +40,28 @@ export const createEucharist = asyncHandler(async (req: Request, res: Response) 
 
 
 //Get All eucharist
-export const getEucharist = asyncHandler(async (req: Request, res: Response) => {
+export const getEucharist = asyncHandler(async (req: any, res: Response) => {
     try {
-        const [result] = await pool.query("SELECT * FROM eucharist ORDER BY eucharist_id ASC ");
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT e.* FROM eucharist e JOIN users u ON e.user_id = u.id";
+        const params: any[] = [];
+
+        if (role === 'editor') {
+            query += " WHERE u.parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            query += " WHERE e.user_id = ?";
+            params.push(userId);
+        }
+
+        query += " ORDER BY e.eucharist_id ASC";
+        const [result] = await pool.query(query, params);
         res.json(result as any[]);
     } catch (error) {
-        console.error("Error getting eucharist record:", error);
+        console.error("Error getting eucharist records:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
