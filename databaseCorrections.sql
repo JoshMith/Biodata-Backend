@@ -61,3 +61,21 @@ WHERE parish_name = 'Itheguri Parish';
 UPDATE parishes
 SET parish_name = 'St. Teresa Equator Parish'
 WHERE parish_name = 'St. Teresa Parish';
+
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  actor_id      VARCHAR(255)  NOT NULL,
+  actor_role    VARCHAR(50)   NOT NULL,
+  actor_email   VARCHAR(255)  NOT NULL,
+  action        ENUM('CREATE','UPDATE','DELETE') NOT NULL,
+  entity        VARCHAR(100)  NOT NULL,
+  entity_id     VARCHAR(255)  DEFAULT NULL,
+  detail        JSON          DEFAULT NULL,
+  ip_address    VARCHAR(64)   DEFAULT NULL,
+  created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_actor    (actor_id),
+  INDEX idx_entity   (entity, entity_id),
+  INDEX idx_action   (action),
+  INDEX idx_created  (created_at)
+);

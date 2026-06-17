@@ -8,11 +8,12 @@ import {
   verifyResetToken,
   resetPassword
 } from '../controllers/authController'
+import { auditLog } from '../middlewares/auditLogger'
 
 const router = express.Router()
 
 // Public routes 
-router.post("/register", registerUser)
+router.post("/register", auditLog('CREATE', 'users'), registerUser)
 router.post("/login", loginUser)
 router.post("/logout", logoutUser)
 router.get("/verifyEmail", verifyEmail)

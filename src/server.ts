@@ -11,7 +11,7 @@ import confirmRoutes from "./routes/confirmRoutes"
 import parishRoutes from "./routes/parishRoutes"
 import marriagePartiesRoutes from "./routes/marriagePartiesRoutes"
 import marriageRoutes from "./routes/marriageRoutes"
-import path from "path"
+import auditRoutes from "./routes/auditRoutes"
 
 
 //1:configure the dotenv
@@ -53,27 +53,7 @@ app.use("/confirmation", confirmRoutes)
 app.use("/marriages", marriageRoutes)
 app.use("/marriage-parties", marriagePartiesRoutes)
 app.use("/parish", parishRoutes)
-app.use('/marriage-documents/download', express.static(
-    path.join(__dirname, 'uploads', 'marriage_documents'),
-    {
-        setHeaders: (res, filePath) => {
-            const filename = path.basename(filePath);
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-            const ext = path.extname(filename).toLowerCase();
-            const contentType = {
-                '.pdf': 'application/pdf',
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.doc': 'application/msword',
-                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            }[ext] || 'application/octet-stream';
-
-            res.setHeader('Content-Type', contentType);
-        }
-    }
-));
+app.use("/audit-logs", auditRoutes)
 
 
 app.get('', (req, res) => {
