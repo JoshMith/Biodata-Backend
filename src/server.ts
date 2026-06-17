@@ -139,7 +139,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // start the server
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 3000
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
 app.listen(port, () => {
     console.log(`
