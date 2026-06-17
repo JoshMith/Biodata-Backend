@@ -127,7 +127,16 @@ app.get('', (req, res) => {
 //5:middlewares after the routes
 app.use(notFound)
 
-
+// global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const status = err.status || res.statusCode === 200 ? 500 : res.statusCode;
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} — ${err.message}`);
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
 
 // start the server
 const port = process.env.PORT || 5000
