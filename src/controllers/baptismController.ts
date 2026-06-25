@@ -2,7 +2,11 @@ import { Request, Response } from "express"
 import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 
-//This will handle all baptism-related operations 
+const FULL_ACCESS_ROLES = ['superadmin', 'superviewer'];
+const DEANERY_ACCESS_ROLES = ['deaneryviewer'];
+const OWN_PARISH_ROLES = ['parishadmin', 'parishviewer', 'secretary', 'editor'];
+const MEMBER_ROLE = ['member'];
+
 // Create baptism
 export const createBaptism = asyncHandler(async (req: Request, res: Response) => {
     try {
@@ -45,15 +49,31 @@ export const getBaptism = asyncHandler(async (req: any, res: Response) => {
         const parishId = req.user?.parish_id;
         const userId = req.user?.id;
 
-        let query = "SELECT b.* FROM baptism b JOIN users u ON b.user_id = u.id";
+        let query = "SELECT b.* FROM baptism b";
         const params: any[] = [];
 
-        if (role === 'editor') {
-            query += " WHERE u.parish_id = ?";
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            // full access; no filters
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id JOIN parishes p ON u.parish_id = p.parish_id WHERE p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
             params.push(parishId);
-        } else if (role === 'member') {
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id WHERE u.parish_id = ?";
+            params.push(parishId);
+        } else if (MEMBER_ROLE.includes(role)) {
+            if (!userId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
             query += " WHERE b.user_id = ?";
             params.push(userId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
         }
 
         query += " ORDER BY b.baptism_id ASC";
@@ -67,10 +87,42 @@ export const getBaptism = asyncHandler(async (req: any, res: Response) => {
 
 
 // Get single baptism
-export const getBaptismById = asyncHandler(async (req: Request, res: Response) => {
+export const getBaptismById = asyncHandler(async (req: any, res: Response) => {
     try {
         const { id } = req.params;
-        const [rows] = await pool.query("SELECT * FROM baptism WHERE baptism_id = ?", [id]);
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT b.* FROM baptism b";
+        const params: any[] = [];
+
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            query += " WHERE b.baptism_id = ?";
+            params.push(id);
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id JOIN parishes p ON u.parish_id = p.parish_id WHERE b.baptism_id = ? AND p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
+            params.push(id, parishId);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id WHERE b.baptism_id = ? AND u.parish_id = ?";
+            params.push(id, parishId);
+        } else if (MEMBER_ROLE.includes(role)) {
+            if (!userId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " WHERE b.baptism_id = ? AND b.user_id = ?";
+            params.push(id, userId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const [rows] = await pool.query(query, params);
 
         if ((rows as any[]).length === 0) {
             res.status(400).json({ message: "Baptism record not found" });
@@ -86,16 +138,43 @@ export const getBaptismById = asyncHandler(async (req: Request, res: Response) =
 });
 
 // Get baptism by user_id
-export const getBaptismByUserId = asyncHandler(async (req: Request, res: Response) => {
+export const getBaptismByUserId = asyncHandler(async (req: any, res: Response) => {
     try {
         const { userId } = req.params;
-        const [rows] = await pool.query("SELECT * FROM baptism WHERE user_id = ?", [userId]);
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const currentUserId = String(req.user?.id ?? "");
+        const targetUserId = String(userId);
 
-        // if ((rows as any[]).length === 0) {
-        //     res.status(400).json({ message: "No baptism record found for the given user" });
-        //     return;
-        // }
+        let query = "SELECT b.* FROM baptism b";
+        const params: any[] = [];
 
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            query += " WHERE b.user_id = ?";
+            params.push(userId);
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id JOIN parishes p ON u.parish_id = p.parish_id WHERE b.user_id = ? AND p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
+            params.push(userId, parishId);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN users u ON b.user_id = u.id WHERE b.user_id = ? AND u.parish_id = ?";
+            params.push(userId, parishId);
+        } else if (MEMBER_ROLE.includes(role)) {
+            if (currentUserId !== targetUserId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " WHERE b.user_id = ?";
+            params.push(userId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const [rows] = await pool.query(query, params);
         res.json(rows);
 
     } catch (error) {

@@ -2,6 +2,11 @@ import { Request, Response } from "express"
 import pool from "../config/db.config"
 import asyncHandler from "../middlewares/asyncHandler"
 
+const FULL_ACCESS_ROLES = ['superadmin', 'superviewer'];
+const DEANERY_ACCESS_ROLES = ['deaneryviewer'];
+const OWN_PARISH_ROLES = ['parishadmin', 'parishviewer', 'secretary', 'editor'];
+const MEMBER_ROLE = ['member'];
+
 //This will handle all eucharist-related operations 
 //Create eucharist
 export const createEucharist = asyncHandler(async (req: Request, res: Response) => {
@@ -49,12 +54,28 @@ export const getEucharist = asyncHandler(async (req: any, res: Response) => {
         let query = "SELECT e.* FROM eucharist e JOIN users u ON e.user_id = u.id";
         const params: any[] = [];
 
-        if (role === 'editor') {
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            // full access
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
+            params.push(parishId);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
             query += " WHERE u.parish_id = ?";
             params.push(parishId);
-        } else if (role === 'member') {
+        } else if (MEMBER_ROLE.includes(role)) {
+            if (!userId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
             query += " WHERE e.user_id = ?";
             params.push(userId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
         }
 
         query += " ORDER BY e.eucharist_id ASC";
@@ -68,10 +89,42 @@ export const getEucharist = asyncHandler(async (req: any, res: Response) => {
 
 
 // Get single eucharist
-export const getEucharistById = asyncHandler(async (req: Request, res: Response) => {
+export const getEucharistById = asyncHandler(async (req: any, res: Response) => {
     try {
         const { id } = req.params;
-        const [result] = await pool.query("SELECT * FROM eucharist WHERE eucharist_id = ? ", [id]) as any[];
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
+
+        let query = "SELECT e.* FROM eucharist e JOIN users u ON e.user_id = u.id";
+        const params: any[] = [];
+
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            query += " WHERE e.eucharist_id = ?";
+            params.push(id);
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE e.eucharist_id = ? AND p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
+            params.push(id, parishId);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " WHERE e.eucharist_id = ? AND u.parish_id = ?";
+            params.push(id, parishId);
+        } else if (MEMBER_ROLE.includes(role)) {
+            if (!userId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " WHERE e.eucharist_id = ? AND e.user_id = ?";
+            params.push(id, userId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const [result] = await pool.query(query, params) as any[];
 
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "Eucharist record not found" });
@@ -87,16 +140,43 @@ export const getEucharistById = asyncHandler(async (req: Request, res: Response)
 });
 
 // Get eucharist by user_id
-export const getEucharistByUserId = asyncHandler(async (req: Request, res: Response) => {
+export const getEucharistByUserId = asyncHandler(async (req: any, res: Response) => {
     try {
-        const { userId } = req.params;
-        const [result] = await pool.query("SELECT * FROM eucharist WHERE user_id = ?", [userId]);
+        const { userId: requestedUserId } = req.params;
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = req.user?.id;
 
-        // if (result.rows.length === 0) {
-        //     res.status(400).json({ message: "No eucharist records found for the given user_id" });
-        //     return;
-        // }
+        if (MEMBER_ROLE.includes(role) && String(requestedUserId) !== String(userId)) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
 
+        let query = "SELECT e.* FROM eucharist e JOIN users u ON e.user_id = u.id";
+        const params: any[] = [];
+
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            query += " WHERE e.user_id = ?";
+            params.push(requestedUserId);
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE e.user_id = ? AND p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)";
+            params.push(requestedUserId, parishId);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            if (!parishId) {
+                return res.status(403).json({ message: "Forbidden" });
+            }
+            query += " WHERE e.user_id = ? AND u.parish_id = ?";
+            params.push(requestedUserId, parishId);
+        } else if (MEMBER_ROLE.includes(role)) {
+            query += " WHERE e.user_id = ?";
+            params.push(requestedUserId);
+        } else {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const [result] = await pool.query(query, params);
         res.json(result as any[]);
 
     } catch (error) {

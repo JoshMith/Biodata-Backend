@@ -6,6 +6,16 @@ import jwt from 'jsonwebtoken'
 import { sendVerificationEmail } from "../utils/helpers/sendMail";
 import { generateRegistrationNumber } from "../utils/helpers/generateRegNum"
 
+const FULL_ACCESS_ROLES = ['superadmin', 'superviewer'];
+const DEANERY_ACCESS_ROLES = ['deaneryviewer'];
+const OWN_PARISH_ROLES = ['parishadmin', 'parishviewer', 'secretary', 'editor'];
+const MEMBER_ROLE = ['member'];
+
+const getDeaneryForParish = async (parishId: number | string) => {
+    const [rows] = await pool.query("SELECT deanery FROM parishes WHERE parish_id = ?", [parishId]);
+    if ((rows as any[]).length === 0) return null;
+    return (rows as any[])[0].deanery as string;
+};
 
 // Add a new user
 export const addUser = asyncHandler(async (req, res) => {
@@ -77,20 +87,33 @@ export const getUsers = asyncHandler(async (req: any, res) => {
     try {
         const role = req.user?.role;
         const parishId = req.user?.parish_id;
-        const userId = req.user?.id;
+        const userId = String(req.user?.id);
 
-        let query = "SELECT * FROM users";
+        let query = "SELECT u.* FROM users u";
         const params: any[] = [];
 
-        if (role === 'editor') {
-            query += " WHERE parish_id = ?";
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            // no extra filter
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            const deanery = await getDeaneryForParish(parishId);
+            if (!deanery) {
+                res.status(403).json({ message: "Access denied" });
+                return;
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE p.deanery = ?";
+            params.push(deanery);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            query += " WHERE u.parish_id = ?";
             params.push(parishId);
-        } else if (role === 'member') {
-            query += " WHERE id = ?";
+        } else if (MEMBER_ROLE.includes(role)) {
+            query += " WHERE u.id = ?";
             params.push(userId);
+        } else {
+            res.status(403).json({ message: "Access denied" });
+            return;
         }
 
-        query += " ORDER BY id ASC";
+        query += " ORDER BY u.id ASC";
         const [result] = await pool.query(query, params);
         res.json(result as any[]);
     } catch (error) {
@@ -103,17 +126,30 @@ export const getUserCount = asyncHandler(async (req: any, res: Response) => {
     try {
         const role = req.user?.role;
         const parishId = req.user?.parish_id;
-        const userId = req.user?.id;
+        const userId = String(req.user?.id);
 
-        let query = "SELECT COUNT(*) AS usercount FROM users";
+        let query = "SELECT COUNT(*) AS usercount FROM users u";
         const params: any[] = [];
 
-        if (role === 'editor') {
-            query += " WHERE parish_id = ?";
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            // no extra filter
+        } else if (role === 'deaneryviewer') {
+            const deanery = await getDeaneryForParish(parishId);
+            if (!deanery) {
+                res.status(403).json({ message: "Access denied" });
+                return;
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE p.deanery = ?";
+            params.push(deanery);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            query += " WHERE u.parish_id = ?";
             params.push(parishId);
-        } else if (role === 'member') {
-            query += " WHERE id = ?";
+        } else if (MEMBER_ROLE.includes(role)) {
+            query += " WHERE u.id = ?";
             params.push(userId);
+        } else {
+            res.status(403).json({ message: "Access denied" });
+            return;
         }
 
         const [result] = await pool.query(query, params);
@@ -127,13 +163,40 @@ export const getUserCount = asyncHandler(async (req: any, res: Response) => {
 
 
 //Get single user by name
-export const getUserByName = asyncHandler(async (req, res) => {
+export const getUserByName = asyncHandler(async (req: any, res) => {
     try {
         const { name } = req.params;
-        const [result] = await pool.query(
-            "SELECT * FROM users WHERE TRIM(LOWER(name)) = TRIM(LOWER(?))",
-            [name]
-        );
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = String(req.user?.id);
+
+        let query = "SELECT u.* FROM users u";
+        const params: any[] = [name];
+        let whereClause = "TRIM(LOWER(u.name)) = TRIM(LOWER(?))";
+
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            // no additional filter
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            const deanery = await getDeaneryForParish(parishId);
+            if (!deanery) {
+                res.status(403).json({ message: "Access denied" });
+                return;
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id";
+            whereClause += " AND p.deanery = ?";
+            params.push(deanery);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            whereClause += " AND u.parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            whereClause += " AND u.id = ?";
+            params.push(userId);
+        } else {
+            res.status(403).json({ message: "Access denied" });
+            return;
+        }
+
+        const [result] = await pool.query(`${query} WHERE ${whereClause}`, params);
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
             return;
@@ -146,15 +209,46 @@ export const getUserByName = asyncHandler(async (req, res) => {
 });
 
 //Get single user by Id
-export const getUserById = asyncHandler(async (req, res) => {
+export const getUserById = asyncHandler(async (req: any, res) => {
     try {
-        const { id } = req.params
-        const [result] = await pool.query("SELECT * FROM users WHERE id = ?", [id])
+        const { id } = req.params;
+        const role = req.user?.role;
+        const parishId = req.user?.parish_id;
+        const userId = String(req.user?.id);
+
+        let query = "SELECT u.* FROM users u";
+        const params: any[] = [id];
+
+        if (FULL_ACCESS_ROLES.includes(role)) {
+            query += " WHERE u.id = ?";
+        } else if (DEANERY_ACCESS_ROLES.includes(role)) {
+            const deanery = await getDeaneryForParish(parishId);
+            if (!deanery) {
+                res.status(403).json({ message: "Access denied" });
+                return;
+            }
+            query += " JOIN parishes p ON u.parish_id = p.parish_id WHERE u.id = ? AND p.deanery = ?";
+            params.push(deanery);
+        } else if (OWN_PARISH_ROLES.includes(role)) {
+            query += " WHERE u.id = ? AND u.parish_id = ?";
+            params.push(parishId);
+        } else if (role === 'member') {
+            if (id !== userId) {
+                res.status(403).json({ message: "Access denied" });
+                return;
+            }
+            query += " WHERE u.id = ?";
+        } else {
+            res.status(403).json({ message: "Access denied" });
+            return;
+        }
+
+        const [result] = await pool.query(query, params);
         if ((result as any[]).length === 0) {
             res.status(400).json({ message: "User not found" });
-            return
+            return;
         }
-        res.json((result as any[])[0])
+        res.json((result as any[])[0]);
     } catch (error) {
         console.error("Error creating user:", error);
         res.status(500).json({ message: "Internal server error" });

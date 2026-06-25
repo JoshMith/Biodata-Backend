@@ -2,6 +2,67 @@ import { Request, Response } from 'express';
 import asyncHandler from '../middlewares/asyncHandler';
 import pool from '../config/db.config';
 
+const FULL_ACCESS_ROLES = ['superadmin', 'superviewer'];
+const DEANERY_ACCESS_ROLES = ['deaneryviewer'];
+const OWN_PARISH_ROLES = ['parishadmin', 'parishviewer', 'secretary', 'editor'];
+const MEMBER_ROLE = ['member'];
+
+const buildMarriageAccessFilter = (role: string, parishId: any, userId: any) => {
+    if (FULL_ACCESS_ROLES.includes(role)) {
+        return { join: '', condition: '', params: [] };
+    }
+
+    if (DEANERY_ACCESS_ROLES.includes(role)) {
+        if (!parishId) {
+            return null;
+        }
+        return {
+            join: ' JOIN parishes p ON u.parish_id = p.parish_id',
+            condition: 'p.deanery = (SELECT deanery FROM parishes WHERE parish_id = ?)',
+            params: [parishId]
+        };
+    }
+
+    if (OWN_PARISH_ROLES.includes(role)) {
+        if (!parishId) {
+            return null;
+        }
+        return {
+            join: '',
+            condition: 'u.parish_id = ?',
+            params: [parishId]
+        };
+    }
+
+    if (MEMBER_ROLE.includes(role)) {
+        if (!userId) {
+            return null;
+        }
+        return {
+            join: '',
+            condition: 'm.user_id = ?',
+            params: [userId]
+        };
+    }
+
+    return null;
+};
+
+const buildMarriageQuery = (baseQuery: string, accessFilter: { join: string; condition: string; params: any[] }, additionalCondition?: string) => {
+    let query = baseQuery;
+    query += accessFilter.join;
+
+    if (accessFilter.condition) {
+        query += ` WHERE ${accessFilter.condition}`;
+    }
+
+    if (additionalCondition) {
+        query += accessFilter.condition ? ` AND ${additionalCondition}` : ` WHERE ${additionalCondition}`;
+    }
+
+    return query;
+};
+
 // CREATE a new marriage record
 export const createMarriage = asyncHandler(async (req: Request, res: Response) => {
     const {
@@ -67,25 +128,48 @@ export const getAllMarriages = asyncHandler(async (req: any, res: Response) => {
     const parishId = req.user?.parish_id;
     const userId = req.user?.id;
 
-    let query = "SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id";
-    const params: any[] = [];
-
-    if (role === 'editor') {
-        query += " WHERE u.parish_id = ?";
-        params.push(parishId);
-    } else if (role === 'member') {
-        query += " WHERE m.user_id = ?";
-        params.push(userId);
+    const accessFilter = buildMarriageAccessFilter(role, parishId, userId);
+    if (!accessFilter) {
+        return res.status(403).json({ message: 'Forbidden' });
     }
 
-    const [result] = await pool.query(query, params);
+    const query = buildMarriageQuery(
+        'SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id',
+        accessFilter
+    );
+
+    const [result] = await pool.query(query, accessFilter.params);
     res.json(result as any[]);
 });
 
 // READ all marriage records for a specific user
-export const getUserMarriages = asyncHandler(async (req: Request, res: Response) => {
+export const getUserMarriages = asyncHandler(async (req: any, res: Response) => {
     const { user_id } = req.params;
-    const [result] = await pool.query('SELECT * FROM marriages WHERE user_id = ?', [user_id]);
+    const role = req.user?.role;
+    const parishId = req.user?.parish_id;
+    const userId = req.user?.id;
+
+    const accessFilter = buildMarriageAccessFilter(role, parishId, userId);
+    if (!accessFilter) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    if (MEMBER_ROLE.includes(role) && String(userId) !== String(user_id)) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const query = buildMarriageQuery(
+        'SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id',
+        accessFilter,
+        MEMBER_ROLE.includes(role) ? undefined : 'm.user_id = ?'
+    );
+
+    const params = [...accessFilter.params];
+    if (!MEMBER_ROLE.includes(role)) {
+        params.push(user_id);
+    }
+
+    const [result] = await pool.query(query, params);
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'No marriage records found for this user' });
     }
@@ -93,22 +177,40 @@ export const getUserMarriages = asyncHandler(async (req: Request, res: Response)
 });
 
 // Get full marriage details with parties — compatible with MySQL < 5.7.22
-export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Response) => {
+export const getFullMarriageByUserId = asyncHandler(async (req: any, res: Response) => {
     const { user_id } = req.params;
+    const role = req.user?.role;
+    const parishId = req.user?.parish_id;
+    const userId = req.user?.id;
 
-    // Step 1: Get the marriage record
-    const [marriages] = await pool.query(
-        `SELECT * FROM marriages WHERE user_id = ? ORDER BY marriage_date DESC`,
-        [user_id]
-    ) as any[];
+    const accessFilter = buildMarriageAccessFilter(role, parishId, userId);
+    if (!accessFilter) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
 
-    if (!marriages || (marriages as any[]).length === 0) {
+    if (MEMBER_ROLE.includes(role) && String(userId) !== String(user_id)) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const query = buildMarriageQuery(
+        'SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id',
+        accessFilter,
+        MEMBER_ROLE.includes(role) ? undefined : 'm.user_id = ?'
+    );
+
+    const params = [...accessFilter.params];
+    if (!MEMBER_ROLE.includes(role)) {
+        params.push(user_id);
+    }
+
+    const [marriages] = await pool.query(query, params) as any[];
+
+    if (!marriages || marriages.length === 0) {
         return res.status(404).json({ error: 'No marriage records found for this user' });
     }
 
-    // Step 2: For each marriage, fetch its parties
     const results = await Promise.all(
-        (marriages as any[]).map(async (marriage: any) => {
+        marriages.map(async (marriage: any) => {
             const [parties] = await pool.query(
                 `SELECT * FROM marriage_parties WHERE marriage_id = ?`,
                 [marriage.marriage_id]
@@ -125,9 +227,26 @@ export const getFullMarriageByUserId = asyncHandler(async (req: Request, res: Re
 });
 
 // READ a single marriage record by ID
-export const getMarriageById = asyncHandler(async (req: Request, res: Response) => {
+export const getMarriageById = asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
-    const [result] = await pool.query('SELECT * FROM marriages WHERE marriage_id = ?', [id]);
+    const role = req.user?.role;
+    const parishId = req.user?.parish_id;
+    const userId = req.user?.id;
+
+    const accessFilter = buildMarriageAccessFilter(role, parishId, userId);
+    if (!accessFilter) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const query = buildMarriageQuery(
+        'SELECT m.* FROM marriages m JOIN users u ON m.user_id = u.id',
+        accessFilter,
+        'm.marriage_id = ?'
+    );
+
+    const params = [...accessFilter.params, id];
+    const [result] = await pool.query(query, params);
+
     if ((result as any[]).length === 0) {
         return res.status(404).json({ error: 'Marriage record not found' });
     }
