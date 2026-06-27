@@ -183,12 +183,16 @@ export const loginUser = asyncHandler(
 
     // Fetch parish name for the user
     let parishName: string | null = null;
+    let deanery:string | null=null;
     if (user.parish_id) {
-      const [parishResult] = (await pool.query(
-        `SELECT parish_name FROM parishes WHERE parish_id = ?`,
+      const [parishRows] = (await pool.query(
+        `SELECT parish_name,deanery FROM parishes WHERE parish_id = ?`,
         [user.parish_id],
       )) as any;
-      parishName = (parishResult as any[])[0]?.parish_name || null;
+      const parishArray = parishRows as any[];
+
+  parishName = parishArray[0]?.parish_name || null;
+  deanery = parishArray[0]?.deanery || null;
     }
 
     // Generate the JWT token (custom function for token generation)
@@ -207,6 +211,7 @@ export const loginUser = asyncHandler(
         verified: user.verified,
         parishId: user.parish_id,
         parishName: parishName,
+        deanery:deanery
       },
     });
   },
