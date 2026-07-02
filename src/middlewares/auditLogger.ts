@@ -22,10 +22,15 @@ export const auditLog = (action: AuditAction, entity: string) => {
         if (!actor) return; // unauthenticated — nothing to log
 
         // Best-effort entity ID extraction from params or response body
+        const extractParam = (p: any): string | undefined => {
+          if (!p) return undefined;
+          return Array.isArray(p) ? p[0] : String(p);
+        };
+
         const entityId: string =
-          req.params?.id ||
-          req.params?.userId ||
-          req.params?.user_id ||
+          extractParam(req.params?.id) ||
+          extractParam(req.params?.userId) ||
+          extractParam(req.params?.user_id) ||
           '';
 
         // Sanitise body — remove password fields before storing
